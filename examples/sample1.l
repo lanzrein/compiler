@@ -16,17 +16,20 @@
  */
 
 %{
-/* need this for the call to getlogin() below */
 #include <unistd.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "tokens.h"
+
 %}
 
 DIGIT [0-9]*
 STRING \"(\\.|[^\\"])*\"
+TYPE char|int|float
 
 %%
+{TYPE}  {printf("This is a type : %s",yytext);}
 "(" 	{printf("This is a right bracket\n");}
 ")" 	{printf("This is a left bracket\n");}
 username	{if(getlogin()!=NULL)printf("%s\n", getlogin());}
@@ -41,8 +44,11 @@ username	{if(getlogin()!=NULL)printf("%s\n", getlogin());}
 				}
 			}
 				
-{DIGIT}* 	{printf("This is a whole number : %d\n", atoi(yytext));}
+{DIGIT}*+ 	{printf("This is a whole number : %d\n", atoi(yytext));}
 {DIGIT}*+"."{DIGIT}* 	{printf("This is a REAL number : %f\n", atof(yytext));} // the current text is yytext
+
+
+
 <<EOF>> 	{printf("File is over!\n");yyterminate();}
 %%
 

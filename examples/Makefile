@@ -2,7 +2,7 @@ LEX=flex
 CC=gcc
 CFLAGS+= -std=c99 -Wall -g
 
-all: lexer
+all: lexer clean
 
 lexer: lex.yy.c
 	gcc $(CFLAGS) -o lexer lex.yy.c -lfl
