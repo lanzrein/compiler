@@ -1,0 +1,4 @@
+This is a file // with a few comments that need to be ignored!
+Hopefully you can see what I mean // And ignore those comments. 
+//This line is just dumb right !? 
+But this line rocks ! 

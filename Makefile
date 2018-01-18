@@ -5,8 +5,8 @@ LDFLAGS+= -lfl
 
 all: lexer clean
 
-lexer: lex.yy.c tokens.o
-	gcc $(CFLAGS) -o lexer lex.yy.c tokens.o $(LDFLAGS)
+lexer: lex.yy.c tokens.o filehandler.o
+	gcc $(CFLAGS) -o lexer lex.yy.c tokens.o filehandler.o $(LDFLAGS)
 
 
 lex.yy.c: lexer.l

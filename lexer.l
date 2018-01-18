@@ -12,6 +12,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "tokens.h"
+
+//this is for our parsing of defines.
+#define MAX_INCLUDE_DEPTH 1024
+YY_BUFFER_STATE includes_stack[MAX_INCLUDE_DEPTH];
+int currPtr = 0;
 %}
 
 /*Definitions..*/
@@ -64,8 +69,57 @@ AMP &
 BANG !
 DPIPE \|\|
 DAMP &&
+INCLUDE #include
 
+%x COMMENTSINGLE
+%x COMMENTMULTI
+%x INCLUDECND
 %%
+{INCLUDE}	{printf("Including a new file.\n");BEGIN(INCLUDECND);}
+<INCLUDECND>[ \t]* /*discard white*/
+<INCLUDECND>{STRCONST}	{
+							//check fo rmax depth
+							if(currPtr >= MAX_INCLUDE_DEPTH){
+								fprintf(stderr,"Reached max include depth!");
+								BEGIN(INITIAL);
+							}
+							printf("Starting to include new file %s\n",yytext);
+							int length = strlen(yytext);
+							//check if valid name..
+							if(length<2){
+								fprintf(stderr,"Length of file is not long enough.\n");
+								BEGIN(INITIAL);
+							}
+							//take the name and remove the quotes
+							char* name = malloc(strlen(yytext)-2);
+							memcpy(name,yytext+1,strlen(yytext)-2);
+							name[strlen(yytext)-2] = '\0';
+							includes_stack[currPtr++] = YY_CURRENT_BUFFER;
+							printf("Name : %s\n",name);
+							yyin = fopen(name,"r");
+							free(name);
+							if(NULL==yyin){
+								fprintf(stderr,"Couldn't open file.\n");
+								
+								BEGIN(INITIAL);
+							}
+							
+							yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
+							BEGIN(INITIAL);
+						}
+							
+								
+							
+<INCLUDECND>"."	{fprintf(stderr,"Error expected file name in quotes got : %s.\n",yytext);BEGIN(INITIAL);}
+"\/\*"		{printf("Multi line comment start\n");BEGIN(COMMENTMULTI);}
+<COMMENTMULTI>\n	/*discard*/
+<COMMENTMULTI>[^*\n]*	/*discard*/
+<COMMENTMULTI>"*"+[^*/\n]* /*discard*/
+<COMMENTMULTI>"*"+"/"	{printf("End of multi line comment\n");BEGIN(INITIAL);}
+"\/\/"		{printf("Comment detected.\n");BEGIN(COMMENTSINGLE);}
+<COMMENTSINGLE>"\n"	{printf("End of comment ! \n");BEGIN(INITIAL);}
+<COMMENTSINGLE>[^\n]	{/* discard */}
+
 {TYPE} 	{printf("This is a %s : %s\n",TOKENS_MAP[0].translation,yytext);}
 {FOR}	{printf("Keywork %s \n", TOKENS_MAP[1].translation);}
 {WHILE}	{printf("Keywork %s \n", TOKENS_MAP[2].translation);}
@@ -83,8 +137,9 @@ DAMP &&
 {STRCONST}    {
 				printf("%s detected\n", TOKENS_MAP[12].translation);
 				if(strlen(yytext) > 2){
-					char* str = malloc(strlen(yytext)); 
+					char* str = malloc(strlen(yytext)-2); 
 					strncpy(str,yytext+1,strlen(yytext)-2);
+					str[strlen(yytext)-2]='\0';
 					printf("String with value : %s\n",str);
 					free(str);
 				}else{
@@ -127,7 +182,15 @@ DAMP &&
 {DPIPE}	{printf("%s detected\n", TOKENS_MAP[42].translation);}
 {DAMP}	{printf("%s detected\n", TOKENS_MAP[43].translation);}
 
-<<EOF>> 	{printf("File is over!\n");yyterminate();}
+<<EOF>> 	{printf("File is over!\n");
+				if(0==currPtr){
+					yyterminate();
+				}else{
+					currPtr--;
+					yy_delete_buffer(YY_CURRENT_BUFFER);
+					yy_switch_to_buffer(includes_stack[currPtr]);
+				}
+			}
 %%
 
 

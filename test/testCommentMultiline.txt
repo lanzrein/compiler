@@ -1,0 +1,12 @@
+/**NOW WE HAVE MULTI 
+ * line comments. they can 
+ * spawn many lines */
+ Hi !
+ /*Or a single line */
+ 
+ How are you ?
+ /* Or end on a different line
+ 
+ 
+ 
+ */
