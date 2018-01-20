@@ -36,7 +36,7 @@ RETURN return
 
 IDENT [_a-zA-Z][_a-zA-Z0-9]*
 INTCONST [0-9]*
-REALCONST [0-9]*+"."[0-9]*
+REALCONST [0-9]*+"."[0-9]*+(e-?INTCONST)?
 STRCONST \"(\\.|[^\\"])*\"
 CHARCONST \'.\'
 
@@ -74,6 +74,7 @@ DPIPE \|\|
 DAMP &&
 INCLUDE #include
 
+
 %x COMMENTSINGLE
 %x COMMENTMULTI
 %x INCLUDECND
@@ -99,10 +100,18 @@ INCLUDE #include
 							name[length] = '\0';
 							
 							
+							//check for cycles...
+							for(int idx = 0; idx < currPtr; idx++){
+								if(strcmp(name,filenameStack[idx])==0){
+									fprintf(stderr,"Include cycle detected ! %s name is in a cycle. Aborting\n",name);
+									exit(1);
+								}
+							}
 							
 							includes_stack[currPtr++] = YY_CURRENT_BUFFER;
 							
 							if(debug){printf("Name : %s\n",name);}
+							
 							
 							yyin = fopen(name,"r");
 							if(NULL==yyin){
@@ -206,6 +215,7 @@ INCLUDE #include
 
 
 <<EOF>> 	{if(debug){printf("File %s is over! Line total : %d\n",currName,yylineno);}
+				yylineno = 0;
 				if(0==currPtr){
 					free(currName);
 					yyterminate();
