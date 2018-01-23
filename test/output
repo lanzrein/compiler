@@ -1,93 +1,0 @@
-Opening file : dummy.c
-Multi line comment start
-End of multi line comment
-Including a new file.
-Starting to include new file "example.c"
-Name : example.c
-Including a new file.
-Starting to include new file "deep.c"
-Name : deep.c
-Multi line comment start
-End of multi line comment
-File deep.c is over! Line total : 3
-This is a TYPE : int
-Detected IDENT : file_opener
-LPAR detected
-Detected IDENT : FILE
-STAR detected
-Detected IDENT : fp
-COMMA detected
-This is a TYPE : char
-STAR detected
-Detected IDENT : name
-RPAR detected
-LBRACE detected
-Detected IDENT : fp
-ASSIGN detected
-Detected IDENT : fopen
-LPAR detected
-Detected IDENT : name
-COMMA detected
-STRCONST detected
-String with value : r
-RPAR detected
-SEMI detected
-Keywork IF 
-LPAR detected
-BANG detected
-Detected IDENT : fp
-RPAR detected
-LBRACE detected
-Keywork RETURN 
-MINUS detected
-Detected INTCONST : 1SEMI detected
-RBRACE detected
-Keywork RETURN 
-Detected INTCONST : 0SEMI detected
-RBRACE detected
-File example.c is over! Line total : 11
-This is a TYPE : int
-Detected IDENT : main
-LPAR detected
-RPAR detected
-LBRACE detected
-Keywork FOR 
-LPAR detected
-This is a TYPE : int
-Detected IDENT : x
-ASSIGN detected
-Detected INTCONST : 0SEMI detected
-Detected IDENT : x
-LT detected
-Detected INTCONST : 10SEMI detected
-Detected IDENT : x
-INCR detected
-RPAR detected
-LBRACE detected
-Detected IDENT : printf
-LPAR detected
-STRCONST detected
-String with value : %d
-COMMA detected
-Detected IDENT : x
-RPAR detected
-SEMI detected
-RBRACE detected
-Detected IDENT : end
-LPAR detected
-RPAR detected
-SEMI detected
-RBRACE detected
-Detected IDENT : void
-Detected IDENT : end
-LPAR detected
-RPAR detected
-LBRACE detected
-Detected IDENT : printf
-LPAR detected
-STRCONST detected
-String with value : goodbye
-RPAR detected
-SEMI detected
-RBRACE detected
-File dummy.c.c is over! Line total : 26
