@@ -21,6 +21,9 @@
  * 
  */
  #include "tokens.h"
+ #include <stdlib.h>
+ #include <string.h>
+ #include <stdio.h>
 
 
 /**
@@ -84,5 +87,32 @@ const struct token_translate TOKENS_MAP[] = {
 	 {"BANG","!"},
 	 {"DPIPE","||"},{"DAMP","&&"}//logic
 };
+
+
+void prettyprint(char* file,int lineno, int tokenIdx, char* text){
+	printf("File %s Line %d Token %s \'%s\'\n",file,lineno,TOKENS_MAP[tokenIdx].translation,text);	
+}
+
+
+void processString(char* file, int lineno, char* yytext){
+				
+				if(strlen(yytext) >= 2){
+					char* str = malloc(strlen(yytext)-2); 
+					strncpy(str,yytext+1,strlen(yytext)-2);
+					str[strlen(yytext)-2]='\0';
+					prettyprint(file,lineno,12,str);
+					free(str);
+				}else{
+					fprintf(stderr, "Error encountered when parsing a token. \n");
+				}
+	
+}
+
+void processChar(char* file, int lineno, char* yytext){
+	
+		printf("File %s Line %d Token %s \'%c\'\n",file,lineno,TOKENS_MAP[13].translation,yytext[1]);	
+
+	
+}
 
 

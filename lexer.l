@@ -12,14 +12,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "tokens.h"
+#include "defines.h"
 
-//this is for our parsing of defines.
+
+int debug = 0;
+int closeFile();
+
+
+//this is for our parsing of include.
 #define MAX_INCLUDE_DEPTH 1024
 YY_BUFFER_STATE includes_stack[MAX_INCLUDE_DEPTH];
 char* filenameStack[MAX_INCLUDE_DEPTH];
 char* currName;
 int currPtr = 0;
-int debug = 0;
+//This is for our define parsing. 
+char* identifier; 
+char currentText[MAX_DEFINE_LENGTH]; 
+define_array def_array = {0,0,};
+#define MAX_DEFINE_DEPTH MAX_INCLUDE_DEPTH
+YY_BUFFER_STATE defineFile;
+char* currSubstitution[MAX_DEFINE_LENGTH];
+int substitutionPointer = 0;
+
+
+
 %}
 
 /*Definitions..*/
@@ -35,8 +51,8 @@ CONTINUE continue
 RETURN return
 
 IDENT [_a-zA-Z][_a-zA-Z0-9]*
-INTCONST [0-9]*
-REALCONST [0-9]*+"."[0-9]*+(e-?INTCONST)?
+INTCONST [-+]?[0-9]+
+REALCONST [-+]?[0-9]+(.[0-9]+)?([eE][-+]?[0-9]+)?|[-+]?.[0-9]+([eE][-+]?[0-9]+)?
 STRCONST \"(\\.|[^\\"])*\"
 CHARCONST \'.\'
 
@@ -72,13 +88,67 @@ AMP &
 BANG !
 DPIPE \|\|
 DAMP &&
+
+
 INCLUDE #include
+DEFINE #define
+UNDEFINE #undef
+
+
 
 
 %x COMMENTSINGLE
 %x COMMENTMULTI
 %x INCLUDECND
+%x DEFINECND
+%x LFTEXT
+%x UNDEFCND
 %%
+{DEFINE}	{if(debug){printf("new define encoutered\n");}if(def_array.cursor > MAX_DEFINES){fprintf(stderr,"Error too many defines\n");}else{BEGIN(DEFINECND);}}
+<DEFINECND>[ \t]* /* discard white */
+<DEFINECND>{IDENT} {
+					  identifier = malloc(strlen(yytext)+1);
+					  strcpy(identifier, yytext);
+					  //start looking for text. 
+					  BEGIN(LFTEXT);
+					 }
+<LFTEXT>[^\n]	{
+					if(strlen(currentText) > 4096){
+						fprintf(stderr,"Error on %s length of text too big\n",currentText);
+						BEGIN(INITIAL);
+					}else{
+						strcat(currentText,yytext);
+					}
+				}
+					
+
+<LFTEXT>\n		{
+					if(debug){
+						printf("End of define %s \n %s \n",identifier, currentText);
+					}
+					//create the define
+					define* newDef = malloc(sizeof(define));
+					memset(currSubstitution,0,MAX_DEFINE_LENGTH);
+					substitutionPointer = currPtr;
+					
+					
+					
+					
+					allocDefine(newDef,identifier, currentText);
+					//add it to the list
+					addNode(&(def_array), newDef);
+					memset(currentText,0,strlen(currentText));
+					BEGIN(INITIAL);
+				}
+				
+{UNDEFINE}	{if(debug){printf("Start undefining\n");}
+				BEGIN(UNDEFCND);
+			}
+<UNDEFCND>{IDENT}	{
+						removeNode(&(def_array), yytext);
+						BEGIN(INITIAL);
+					}
+					
 {INCLUDE}	{if(debug){printf("Including a new file.\n");}BEGIN(INCLUDECND);}
 <INCLUDECND>[ \t]* /*discard white*/
 <INCLUDECND>{STRCONST}	{
@@ -148,90 +218,90 @@ INCLUDE #include
 <COMMENTSINGLE>"\n"	{if(debug){printf("End of comment ! \n");}yylineno++;BEGIN(INITIAL);}
 <COMMENTSINGLE>[^\n]	{/* discard */}
 
-{TYPE} 	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[0].translation,yytext);}
-{FOR}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[1].translation,yytext);}
-{WHILE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[2].translation,yytext);}
-{DO}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[3].translation,yytext);}
-{IF}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[4].translation,yytext);}
-{ELSE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[5].translation,yytext);}
-{BREAK}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[6].translation,yytext);}
-{CONTINUE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[7].translation,yytext);}
-{RETURN}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[8].translation,yytext);}
+{TYPE} 	{prettyprint(currName,yylineno,0,yytext);}
+{FOR}	{prettyprint(currName,yylineno,1,yytext);}
+{WHILE}	{prettyprint(currName,yylineno,2,yytext);}
+{DO}	{prettyprint(currName,yylineno,3,yytext);}
+{IF}	{prettyprint(currName,yylineno,4,yytext);}
+{ELSE}	{prettyprint(currName,yylineno,5,yytext);}
+{BREAK}	{prettyprint(currName,yylineno,6,yytext);}
+{CONTINUE}	{prettyprint(currName,yylineno,7,yytext);}
+{RETURN}	{prettyprint(currName,yylineno,8,yytext);}
 
-{IDENT}		{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[9].translation,yytext);}
-
-{INTCONST} 	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[10].translation,yytext);}
-{REALCONST} 	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[11].translation,yytext);} // the current text is yytext
-{STRCONST}    {
-				if(strlen(yytext) > 2){
-					char* str = malloc(strlen(yytext)-2); 
-					strncpy(str,yytext+1,strlen(yytext)-2);
-					str[strlen(yytext)-2]='\0';
-					printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[12].translation,str);
-					free(str);
+{IDENT}		{if(findIdentifier(&def_array,yytext) >= 0){
+				//print the out 
+				
 				}else{
-					printf("There is an emptry string\n");
+				prettyprint(currName,yylineno,9,yytext);
 				}
 			}
+
+{INTCONST} 	{prettyprint(currName,yylineno,10,yytext);}
+{REALCONST} 	{prettyprint(currName,yylineno,11,yytext);} // the current text is yytext
+{STRCONST}    { processString(currName,yylineno,yytext); }				
 			
-{CHARCONST}	{printf("File %s Line %d Token %s \'%c\'\n",currName,yylineno,TOKENS_MAP[13].translation,yytext[1]);}
+			
+{CHARCONST}	{processChar(currName,yylineno,yytext);}
 
-{LPAR}		{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[14].translation,yytext);}
-{RPAR}		{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[15].translation,yytext);}
-{LBRACKET}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[16].translation,yytext);}
-{RBRACKET}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[17].translation,yytext);}
-{LBRACE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[18].translation,yytext);}
-{RBRACE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[19].translation,yytext);}
+{LPAR}		{prettyprint(currName,yylineno,14,yytext);}
+{RPAR}		{prettyprint(currName,yylineno,15,yytext);}
+{LBRACKET}	{prettyprint(currName,yylineno,16,yytext);}
+{RBRACKET}	{prettyprint(currName,yylineno,17,yytext);}
+{LBRACE}	{prettyprint(currName,yylineno,18,yytext);}
+{RBRACE}	{prettyprint(currName,yylineno,19,yytext);}
 
-{COMMA}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[20].translation,yytext);}
-{SEMI}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[21].translation,yytext);}
-{QUEST}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[22].translation,yytext);}
-{COLON}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[23].translation,yytext);}
+{COMMA}	{prettyprint(currName,yylineno,20,yytext);}
+{SEMI}	{prettyprint(currName,yylineno,21,yytext);}
+{QUEST}	{prettyprint(currName,yylineno,22,yytext);}
+{COLON}	{prettyprint(currName,yylineno,23,yytext);}
 
-{EQUALS}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[24].translation,yytext);}
-{NEQUAL}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[25].translation,yytext);}
-{GT}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[26].translation,yytext);}
-{GE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[27].translation,yytext);}
-{LT}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[28].translation,yytext);}
-{LE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[29].translation,yytext);}
-{ASSIGN}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[30].translation,yytext);}
-{INCR}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[31].translation,yytext);}
-{DECR}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[32].translation,yytext);}
-{PLUS}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[33].translation,yytext);}
-{MINUS}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[34].translation,yytext);}
-{STAR}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[35].translation,yytext);}
-{SLASH}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[36].translation,yytext);}
-{MOD}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[37].translation,yytext);}
-{TILDE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[38].translation,yytext);}
-{PIPE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[39].translation,yytext);}
-{AMP}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[40].translation,yytext);}
-{BANG}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[41].translation,yytext);}
-{DPIPE}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[42].translation,yytext);}
-{DAMP}	{printf("File %s Line %d Token %s \'%s\'\n",currName,yylineno,TOKENS_MAP[43].translation,yytext);}
+{EQUALS}	{prettyprint(currName,yylineno,24,yytext);}
+{NEQUAL}	{prettyprint(currName,yylineno,25,yytext);}
+{GT}	{prettyprint(currName,yylineno,26,yytext);}
+{GE}	{prettyprint(currName,yylineno,27,yytext);}
+{LT}	{prettyprint(currName,yylineno,28,yytext);}
+{LE}	{prettyprint(currName,yylineno,29,yytext);}
+{ASSIGN}	{prettyprint(currName,yylineno,30,yytext);}
+{INCR}	{prettyprint(currName,yylineno,31,yytext);}
+{DECR}	{prettyprint(currName,yylineno,32,yytext);}
+{PLUS}	{prettyprint(currName,yylineno,33,yytext);}
+{MINUS}	{prettyprint(currName,yylineno,34,yytext);}
+{STAR}	{prettyprint(currName,yylineno,35,yytext);}
+{SLASH}	{prettyprint(currName,yylineno,36,yytext);}
+{MOD}	{prettyprint(currName,yylineno,37,yytext);}
+{TILDE}	{prettyprint(currName,yylineno,38,yytext);}
+{PIPE}	{prettyprint(currName,yylineno,39,yytext);}
+{AMP}	{prettyprint(currName,yylineno,40,yytext);}
+{BANG}	{prettyprint(currName,yylineno,41,yytext);}
+{DPIPE}	{prettyprint(currName,yylineno,42,yytext);}
+{DAMP}	{prettyprint(currName,yylineno,43,yytext);}
 
 [ \t]* /* discard white*/
 \n 	{yylineno++;}
-"." {fprintf(stderr,"File %s Line %d Unexpected token \'%s\'\n",currName,yylineno,yytext);}
 
 
-<<EOF>> 	{if(debug){printf("File %s is over! Line total : %d\n",currName,yylineno);}
-				yylineno = 0;
-				if(0==currPtr){
-					free(currName);
-					yyterminate();
-				}else{
-					currPtr--;
-					//buffer change
-					yy_delete_buffer(YY_CURRENT_BUFFER);
-					yy_switch_to_buffer(includes_stack[currPtr]);
-					//name change.
-					currName = realloc(currName,strlen(filenameStack[currPtr]));
-					
-					memcpy(currName,filenameStack[currPtr],strlen(filenameStack[currPtr]));
-					currName[strlen(filenameStack[currPtr])] = '\0';
-					
+<<EOF>> 	{if(debug){
+					printf("File %s is over! Line total : %d\n",currName,yylineno);
 				}
+			yylineno = 0;
+			if(0==currPtr){
+				free(currName);
+				yyterminate();
+			}else{
+			currPtr--;
+			//buffer change
+			yy_delete_buffer(YY_CURRENT_BUFFER);
+			yy_switch_to_buffer(includes_stack[currPtr]);
+			//name change.
+			currName = realloc(currName,strlen(filenameStack[currPtr]));
+			memcpy(currName,filenameStack[currPtr],strlen(filenameStack[currPtr]));
+			currName[strlen(filenameStack[currPtr])] = '\0';
+				
 			}
+			}
+			
+[.^\n]	{fprintf(stderr,"File %s Line %d Unexpected token \'%s\'\n",currName,yylineno,yytext);}
+
 %%
 
 
@@ -263,3 +333,6 @@ int main(int argc, char** argv)
 	return 0;
   }
 }
+
+
+
