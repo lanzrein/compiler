@@ -16,13 +16,15 @@
 
 
 int debug = 0;
-int closeFile();
+void setupInclude();
 
 
 //this is for our parsing of include.
 #define MAX_INCLUDE_DEPTH 1024
 YY_BUFFER_STATE includes_stack[MAX_INCLUDE_DEPTH];
 char* filenameStack[MAX_INCLUDE_DEPTH];
+int linenoStack[MAX_INCLUDE_DEPTH];
+
 char* currName;
 int currPtr = 0;
 //This is for our define parsing. 
@@ -33,6 +35,8 @@ define_array def_array = {0,0,};
 YY_BUFFER_STATE defineFile;
 char* currSubstitution[MAX_DEFINE_LENGTH];
 int substitutionPointer = 0;
+int ifdef = 0;
+int readingif = 0;
 
 
 
@@ -93,7 +97,10 @@ DAMP &&
 INCLUDE #include
 DEFINE #define
 UNDEFINE #undef
-
+IFDEF #ifdef
+IFNDEF #ifndef
+ELSEDEF #else
+ENDIF #endif
 
 
 
@@ -103,7 +110,100 @@ UNDEFINE #undef
 %x DEFINECND
 %x LFTEXT
 %x UNDEFCND
+%x IFCND
+%x IFIGNORE
+
 %%
+
+
+{IFDEF}		{if(debug){printf("New ifdef encountered\n");}
+				//set our if up. 
+				ifdef  = 1;
+				BEGIN(IFCND);
+			}
+{IFNDEF}	{if(debug){printf("New ifndef encountered\n");}
+				//set our if up. 
+				ifdef  = -1;
+				BEGIN(IFCND);
+			}
+			
+<IFCND>{IDENT}	{
+					if(ifdef > 0){
+						//ifdef
+						if(findIdentifier(&def_array,yytext) > 0){
+							//ident is defined. 
+							//we can read, but we set our flag as reading.
+							readingif = 1;
+							BEGIN(INITIAL);
+						
+						}else{
+							//cant read we have to ignore until else or endif encountered
+							readingif = -1;
+							BEGIN(IFIGNORE);
+						}
+					}else{
+						//ifndef
+						if(findIdentifier(&def_array,yytext) < 0){
+							//ident is not defined. 
+							//we can read, but we set our flag as reading.
+							readingif = 1;
+							BEGIN(INITIAL);
+						
+						}else{
+							//cant read we have to ignore until else or endif encountered
+							readingif = -1;
+							BEGIN(IFIGNORE);
+						}
+					
+					}
+					
+					
+				}
+<IFIGNORE>{ENDIF}	{if(debug){printf("Endif encoutered. Set all flags to 0 and start reading normally\n");}
+						readingif = 0;
+						ifdef = 0;
+						BEGIN(INITIAL);
+					}
+<IFIGNORE>{ELSEDEF}	{if(debug){printf("Else preprocess. Changing our flags\n");}
+					 if(readingif > 0){
+						//we were reading so we stop. 
+						//SHOULD NOT HAPPEN
+						readingif = -1;
+						BEGIN(IFIGNORE);
+					 }else{
+						//start reading
+						readingif = 1;
+						BEGIN(INITIAL);
+					 }
+					 }
+<IFIGNORE>\n	{yylineno++;}
+<IFIGNORE>.	{/*ignore*/}
+{ENDIF}		{if(readingif == 0){fprintf(stderr,"Error, endif encountered outside of an if\n");BEGIN(INITIAL);}
+			readingif = 0;
+			ifdef = 0;
+			BEGIN(INITIAL);
+			}
+			
+{ELSEDEF}	{if(readingif == 0){fprintf(stderr, "Error else preprocessing outside of if\n");BEGIN(INITIAL);}
+				//we need to invert. so if we were reading stop else start
+					if(readingif > 0){
+					//we were reading. 
+						readingif = -1;
+						BEGIN(IFIGNORE);
+					}else{
+						//we were ignoring
+						readingif = 1;
+						BEGIN(INITIAL);
+					}
+				}
+
+
+						
+<IFCND>[ \t]* {/*ignore*/}			
+<IFCND>.	{fprintf(stderr, "Error expected an identifier for the preprocessing of ifdef.\n");
+			 BEGIN(INITIAL);
+			 }
+				
 {DEFINE}	{if(debug){printf("new define encoutered\n");}if(def_array.cursor > MAX_DEFINES){fprintf(stderr,"Error too many defines\n");}else{BEGIN(DEFINECND);}}
 <DEFINECND>[ \t]* /* discard white */
 <DEFINECND>{IDENT} {
@@ -138,6 +238,7 @@ UNDEFINE #undef
 					//add it to the list
 					addNode(&(def_array), newDef);
 					memset(currentText,0,strlen(currentText));
+					yylineno++;
 					BEGIN(INITIAL);
 				}
 				
@@ -152,53 +253,7 @@ UNDEFINE #undef
 {INCLUDE}	{if(debug){printf("Including a new file.\n");}BEGIN(INCLUDECND);}
 <INCLUDECND>[ \t]* /*discard white*/
 <INCLUDECND>{STRCONST}	{
-							//check fo rmax depth
-							if(currPtr >= MAX_INCLUDE_DEPTH){
-								fprintf(stderr,"Reached max include depth!");
-								BEGIN(INITIAL);
-							}
-							if(debug){printf("Starting to include new file %s\n",yytext);}
-							int length = strlen(yytext)-2;
-							//check if valid name..
-							if(length<0){
-								fprintf(stderr,"Length of file name is not long enough.\n");
-								BEGIN(INITIAL);
-							}
-							//take the name and remove the quotes
-							char* name = malloc(length);
-							memcpy(name,yytext+1,length);
-							name[length] = '\0';
-							
-							
-							//check for cycles...
-							for(int idx = 0; idx < currPtr; idx++){
-								if(strcmp(name,filenameStack[idx])==0){
-									fprintf(stderr,"Include cycle detected ! %s name is in a cycle. Aborting\n",name);
-									exit(1);
-								}
-							}
-							
-							includes_stack[currPtr++] = YY_CURRENT_BUFFER;
-							
-							if(debug){printf("Name : %s\n",name);}
-							
-							
-							yyin = fopen(name,"r");
-							if(NULL==yyin){
-								fprintf(stderr,"Couldn't open file.\n");
-								yy_switch_to_buffer(includes_stack[currPtr]);
-								currPtr--;
-								BEGIN(INITIAL);
-							}
-							//set the file name.
-							filenameStack[currPtr-1] = malloc(strlen(currName));
-							memcpy(filenameStack[currPtr-1],currName,strlen(currName));
-							filenameStack[currPtr-1][strlen(currName)] = '\0';
-							memcpy(currName,name,length);
-							currName[length] = '\0';
-							free(name);
-							
-							yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
+							setupInclude();
 							BEGIN(INITIAL);
 						}
 							
@@ -229,7 +284,8 @@ UNDEFINE #undef
 {RETURN}	{prettyprint(currName,yylineno,8,yytext);}
 
 {IDENT}		{if(findIdentifier(&def_array,yytext) >= 0){
-				//print the out 
+				//print the out..
+				//TODO :( 
 				
 				}else{
 				prettyprint(currName,yylineno,9,yytext);
@@ -283,7 +339,6 @@ UNDEFINE #undef
 <<EOF>> 	{if(debug){
 					printf("File %s is over! Line total : %d\n",currName,yylineno);
 				}
-			yylineno = 0;
 			if(0==currPtr){
 				free(currName);
 				yyterminate();
@@ -296,6 +351,8 @@ UNDEFINE #undef
 			currName = realloc(currName,strlen(filenameStack[currPtr]));
 			memcpy(currName,filenameStack[currPtr],strlen(filenameStack[currPtr]));
 			currName[strlen(filenameStack[currPtr])] = '\0';
+			//get yylineno
+			yylineno = linenoStack[currPtr];
 				
 			}
 			}
@@ -332,6 +389,62 @@ int main(int argc, char** argv)
 	yylex();	
 	return 0;
   }
+}
+
+
+void setupInclude(){
+//check for max depth
+							if(currPtr >= MAX_INCLUDE_DEPTH){
+								fprintf(stderr,"Reached max include depth!");
+								BEGIN(INITIAL);
+							}
+							if(debug){printf("Starting to include new file %s\n",yytext);}
+							int length = strlen(yytext)-2;
+							//check if valid name..
+							if(length<0){
+								fprintf(stderr,"Length of file name is not long enough.\n");
+								BEGIN(INITIAL);
+							}
+							//take the name and remove the quotes
+							char* name = malloc(length);
+							memcpy(name,yytext+1,length);
+							name[length] = '\0';
+							
+							
+							//check for cycles...
+							for(int idx = 0; idx < currPtr; idx++){
+								if(strcmp(name,filenameStack[idx])==0){
+									fprintf(stderr,"Include cycle detected ! %s name is in a cycle. Aborting\n",name);
+									exit(1);
+								}
+							}
+							
+							includes_stack[currPtr++] = YY_CURRENT_BUFFER;
+							
+							if(debug){printf("Name : %s\n",name);}
+							
+							
+							yyin = fopen(name,"r");
+							if(NULL==yyin){
+								fprintf(stderr,"Could not open file : %s will continue to read from current file. \n",name);
+								yy_switch_to_buffer(includes_stack[currPtr]);
+								currPtr--;
+								BEGIN(INITIAL);
+							}
+							//set the file name.
+							filenameStack[currPtr-1] = malloc(strlen(currName));
+							memcpy(filenameStack[currPtr-1],currName,strlen(currName));
+							filenameStack[currPtr-1][strlen(currName)] = '\0';
+							memcpy(currName,name,length);
+							currName[length] = '\0';
+							free(name);
+							//save the lineno
+							linenoStack[currPtr-1] = yylineno;
+							yylineno = 1;
+							
+							
+							yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
+
 }
 
 
