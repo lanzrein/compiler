@@ -27,6 +27,8 @@ int linenoStack[MAX_INCLUDE_DEPTH];
 
 char* currName;
 int currPtr = 0;
+
+
 //This is for our define parsing. 
 char* identifier; 
 char currentText[MAX_DEFINE_LENGTH]; 
@@ -35,7 +37,13 @@ define_array def_array = {0,0,};
 YY_BUFFER_STATE defineFile;
 char* currSubstitution[MAX_DEFINE_LENGTH];
 int substitutionPointer = 0;
+
+//TODO use a stack instea.d 
+//this is for ifdefs..
+#define MAX_NESTING 1024
+int ifdefPtr = 0;
 int ifdef = 0;
+int ifStack[MAX_NESTING];
 int readingif = 0;
 
 
@@ -117,27 +125,45 @@ ENDIF #endif
 
 
 {IFDEF}		{if(debug){printf("New ifdef encountered\n");}
+				if(ifdefPtr>=MAX_NESTING){
+					fprintf(stderr, "Error, reached maxed nesting. \n");
+					exit(1);
+				}
 				//set our if up. 
+				ifStack[ifdefPtr++] = readingif;
 				ifdef  = 1;
+				
 				BEGIN(IFCND);
 			}
 {IFNDEF}	{if(debug){printf("New ifndef encountered\n");}
+				if(ifdefPtr>=MAX_NESTING){
+					fprintf(stderr, "Error, reached maxed nesting. \n");
+					exit(1);
+				}
+				
 				//set our if up. 
 				ifdef  = -1;
+				ifStack[ifdefPtr++] = readingif;
+
 				BEGIN(IFCND);
 			}
 			
 <IFCND>{IDENT}	{
 					if(ifdef > 0){
 						//ifdef
-						if(findIdentifier(&def_array,yytext) > 0){
+						if(debug){printf("Ident : %s\n",yytext);}
+						if(findIdentifier(&def_array,yytext) >= 0){
 							//ident is defined. 
+							if(debug){printf("Ident is defined\n");}
+
 							//we can read, but we set our flag as reading.
 							readingif = 1;
 							BEGIN(INITIAL);
 						
 						}else{
 							//cant read we have to ignore until else or endif encountered
+							if(debug){printf("Ident is not defined\n");}
+
 							readingif = -1;
 							BEGIN(IFIGNORE);
 						}
@@ -159,10 +185,31 @@ ENDIF #endif
 					
 					
 				}
+				
+<IFCND>"."		{fprintf(stderr, "Error expected Identifier\n");exit(1);}
+<IFIGNORE>{IFDEF}	{if(debug){printf("IFDEF encountered while ignoring, Setting flags to -1\n");}
+						ifStack[ifdefPtr++] = -1;
+					}
+<IFIGNORE>{IFNDEF}	{if(debug){printf("IFNDEF encountered while ignoring, Setting flags to -1\n");}
+						ifStack[ifdefPtr++] = -1;
+					}
 <IFIGNORE>{ENDIF}	{if(debug){printf("Endif encoutered. Set all flags to 0 and start reading normally\n");}
-						readingif = 0;
-						ifdef = 0;
-						BEGIN(INITIAL);
+						if(ifdefPtr == 0){
+							readingif = 0;
+							ifdef = 0;
+							BEGIN(INITIAL);
+						}else{
+							ifdefPtr--;
+							readingif = ifStack[ifdefPtr];
+							ifdef = 0;
+							if(readingif >= 0){
+								BEGIN(INITIAL);
+							}else{
+								//continue to ignore..
+								BEGIN(IFIGNORE);
+							}
+						
+						}
 					}
 <IFIGNORE>{ELSEDEF}	{if(debug){printf("Else preprocess. Changing our flags\n");}
 					 if(readingif > 0){
@@ -178,16 +225,39 @@ ENDIF #endif
 					 }
 <IFIGNORE>\n	{yylineno++;}
 <IFIGNORE>.	{/*ignore*/}
-{ENDIF}		{if(readingif == 0){fprintf(stderr,"Error, endif encountered outside of an if\n");BEGIN(INITIAL);}
-			readingif = 0;
-			ifdef = 0;
-			BEGIN(INITIAL);
+
+
+{ENDIF}		{if(readingif == 0){
+				fprintf(stderr,"Error, endif encountered outside of an if\n");BEGIN(INITIAL);
+				
+				}else{
+					if(ifdefPtr == 0){
+						//no more ifs to read. 
+						readingif = 0;
+						ifdef = 0;
+						BEGIN(INITIAL);
+					}else{
+						//pop the stack
+						ifdefPtr--;
+ 
+						readingif = ifStack[ifdefPtr];
+						ifdef = 0;
+						if(readingif >= 0){
+							//read
+							BEGIN(INITIAL);
+						}else{
+							//continue to ignore..
+							BEGIN(IFIGNORE);
+						}
+				
+					}
+				}
 			}
 			
 {ELSEDEF}	{if(readingif == 0){fprintf(stderr, "Error else preprocessing outside of if\n");BEGIN(INITIAL);}
 				//we need to invert. so if we were reading stop else start
 					if(readingif > 0){
-					//we were reading. 
+						//we were reading. 
 						readingif = -1;
 						BEGIN(IFIGNORE);
 					}else{
