@@ -426,20 +426,22 @@ ENDIF #endif
 \n 	{yylineno++;}
 
 
-<<EOF>> 	{if(debug){
+<<EOF>> 	{
+				if(debug){
 					printf("File %s is over! Line total : %d\n",currName,yylineno);
 					printf("Pointer states : Sub %d , Files %d \n",substitutionPointer, currPtr);
 				}
 				
-			//first check if defines are done.
-			if(substitutionPointer >= 0){
-				substitutionPointer--;
-				if(substitutionPointer < 0){
-					//no more defines 
-					yy_delete_buffer(YY_CURRENT_BUFFER);
-					yy_switch_to_buffer(initBuffer);
+				//first check if defines are done.
+				//if we are in a define parsing then pop the next one if there is one etc..
+				if(substitutionPointer >= 0){
+					substitutionPointer--;
+					if(substitutionPointer < 0){
+						//no more defines 
+						yy_delete_buffer(YY_CURRENT_BUFFER);
+						yy_switch_to_buffer(initBuffer);
 				}else{
-				
+					//there is a define to continue to parse. 
 					yy_delete_buffer(YY_CURRENT_BUFFER);
 					yy_switch_to_buffer(substitutionStack[substitutionPointer]);
 				}
@@ -449,6 +451,7 @@ ENDIF #endif
 			
 				//then verify if we are done scanning files. 	
 				if(0==currPtr){
+					//finished parsing all files ! 
 					free(currName);
 					
 					yyterminate();
@@ -458,9 +461,8 @@ ENDIF #endif
 					yy_delete_buffer(YY_CURRENT_BUFFER);
 					yy_switch_to_buffer(includes_stack[currPtr]);
 					//name change.
-					currName = realloc(currName,strlen(filenameStack[currPtr]));
-					memcpy(currName,filenameStack[currPtr],strlen(filenameStack[currPtr]));
-					currName[strlen(filenameStack[currPtr])] = '\0';
+					currName = realloc(currName,strlen(filenameStack[currPtr])+1);
+					strcpy(currName,filenameStack[currPtr]);
 					//get yylineno
 					yylineno = linenoStack[currPtr];
 					

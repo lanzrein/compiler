@@ -97,7 +97,7 @@ void prettyprint(char* file,int lineno, int tokenIdx, char* text){
 void processString(char* file, int lineno, char* yytext){
 				
 				if(strlen(yytext) >= 2){
-					char* str = malloc(strlen(yytext)-2); 
+					char* str = malloc(strlen(yytext)-2+1); 
 					strncpy(str,yytext+1,strlen(yytext)-2);
 					str[strlen(yytext)-2]='\0';
 					prettyprint(file,lineno,12,str);
