@@ -24,7 +24,7 @@
  #include <stdlib.h>
  #include <string.h>
  #include <stdio.h>
-
+ 
 
 /**
  * @file tokens.c
@@ -114,5 +114,3 @@ void processChar(char* file, int lineno, char* yytext){
 
 	
 }
-
-

@@ -34,11 +34,11 @@ char* identifier;
 char currentText[MAX_DEFINE_LENGTH]; 
 define_array def_array = {0,0,};
 #define MAX_DEFINE_DEPTH MAX_INCLUDE_DEPTH
-YY_BUFFER_STATE defineFile;
+YY_BUFFER_STATE initBuffer;
+YY_BUFFER_STATE substitutionStack[MAX_DEFINE_DEPTH];
 char* currSubstitution[MAX_DEFINE_LENGTH];
-int substitutionPointer = 0;
+int substitutionPointer = -1;
 
-//TODO use a stack instea.d 
 //this is for ifdefs..
 #define MAX_NESTING 1024
 int ifdefPtr = 0;
@@ -182,8 +182,7 @@ ENDIF #endif
 						}
 					
 					}
-					
-					
+
 				}
 				
 <IFCND>"."		{fprintf(stderr, "Error expected Identifier\n");exit(1);}
@@ -224,7 +223,7 @@ ENDIF #endif
 					 }
 					 }
 <IFIGNORE>\n	{yylineno++;}
-<IFIGNORE>.	{/*ignore*/}
+<IFIGNORE>.		{/*ignore*/}
 
 
 {ENDIF}		{if(readingif == 0){
@@ -299,7 +298,6 @@ ENDIF #endif
 					//create the define
 					define* newDef = malloc(sizeof(define));
 					memset(currSubstitution,0,MAX_DEFINE_LENGTH);
-					substitutionPointer = currPtr;
 					
 					
 					
@@ -353,9 +351,31 @@ ENDIF #endif
 {CONTINUE}	{prettyprint(currName,yylineno,7,yytext);}
 {RETURN}	{prettyprint(currName,yylineno,8,yytext);}
 
-{IDENT}		{if(findIdentifier(&def_array,yytext) >= 0){
+{IDENT}		{	int ident = findIdentifier(&def_array,yytext);
+				if(ident >= 0){
+				if(debug){printf("Found matching ident for %s\n", yytext);
+				}
 				//print the out..
-				//TODO :( 
+				if(substitutionPointer > MAX_DEFINE_DEPTH){
+					fprintf(stderr, "Error, reached max define depth\n");
+					BEGIN(INITIAL);
+				}
+				if(substitutionPointer < 0){
+					substitutionPointer++;
+					//we need to save the current file
+					initBuffer = YY_CURRENT_BUFFER;
+					//switch to buffer;
+					YY_BUFFER_STATE curr = yy_scan_string(def_array.array[ident].arbitraryText);
+					yy_switch_to_buffer(curr);
+					
+					
+				}else{
+					substitutionStack[substitutionPointer++] = YY_CURRENT_BUFFER;
+					YY_BUFFER_STATE curr = yy_scan_string(def_array.array[ident].arbitraryText);
+					yy_switch_to_buffer(curr);
+				
+				}
+				
 				
 				}else{
 				prettyprint(currName,yylineno,9,yytext);
@@ -408,22 +428,43 @@ ENDIF #endif
 
 <<EOF>> 	{if(debug){
 					printf("File %s is over! Line total : %d\n",currName,yylineno);
+					printf("Pointer states : Sub %d , Files %d \n",substitutionPointer, currPtr);
 				}
-			if(0==currPtr){
-				free(currName);
-				yyterminate();
-			}else{
-			currPtr--;
-			//buffer change
-			yy_delete_buffer(YY_CURRENT_BUFFER);
-			yy_switch_to_buffer(includes_stack[currPtr]);
-			//name change.
-			currName = realloc(currName,strlen(filenameStack[currPtr]));
-			memcpy(currName,filenameStack[currPtr],strlen(filenameStack[currPtr]));
-			currName[strlen(filenameStack[currPtr])] = '\0';
-			//get yylineno
-			yylineno = linenoStack[currPtr];
 				
+			//first check if defines are done.
+			if(substitutionPointer >= 0){
+				substitutionPointer--;
+				if(substitutionPointer < 0){
+					//no more defines 
+					yy_delete_buffer(YY_CURRENT_BUFFER);
+					yy_switch_to_buffer(initBuffer);
+				}else{
+				
+					yy_delete_buffer(YY_CURRENT_BUFFER);
+					yy_switch_to_buffer(substitutionStack[substitutionPointer]);
+				}
+				
+			
+			}else{
+			
+				//then verify if we are done scanning files. 	
+				if(0==currPtr){
+					free(currName);
+					
+					yyterminate();
+				}else{
+					currPtr--;
+					//buffer change
+					yy_delete_buffer(YY_CURRENT_BUFFER);
+					yy_switch_to_buffer(includes_stack[currPtr]);
+					//name change.
+					currName = realloc(currName,strlen(filenameStack[currPtr]));
+					memcpy(currName,filenameStack[currPtr],strlen(filenameStack[currPtr]));
+					currName[strlen(filenameStack[currPtr])] = '\0';
+					//get yylineno
+					yylineno = linenoStack[currPtr];
+					
+				}
 			}
 			}
 			
@@ -439,8 +480,8 @@ int main(int argc, char** argv)
 	//there is a file to open
 	yyin = fopen(argv[1],"r");
 	//will be freed in process <<EOF>>
-	currName = malloc(strlen(argv[1]));
-	memcpy(currName,argv[1],strlen(argv[1]));
+	currName = malloc(strlen(argv[1])+1);
+	strcpy(currName,argv[1]);
 	if(NULL==yyin){
 		fprintf(stderr,"Error file %s can't be opened\n",argv[1]);
 		exit(1);
@@ -462,12 +503,13 @@ int main(int argc, char** argv)
 }
 
 
+
 void setupInclude(){
-//check for max depth
-							if(currPtr >= MAX_INCLUDE_DEPTH){
-								fprintf(stderr,"Reached max include depth!");
-								BEGIN(INITIAL);
-							}
+	//check for max depth
+	if(currPtr >= MAX_INCLUDE_DEPTH){
+	fprintf(stderr,"Reached max include depth!");
+	BEGIN(INITIAL);
+	}
 							if(debug){printf("Starting to include new file %s\n",yytext);}
 							int length = strlen(yytext)-2;
 							//check if valid name..
@@ -476,7 +518,7 @@ void setupInclude(){
 								BEGIN(INITIAL);
 							}
 							//take the name and remove the quotes
-							char* name = malloc(length);
+							char* name = malloc(length+1);
 							memcpy(name,yytext+1,length);
 							name[length] = '\0';
 							
@@ -502,10 +544,10 @@ void setupInclude(){
 								BEGIN(INITIAL);
 							}
 							//set the file name.
-							filenameStack[currPtr-1] = malloc(strlen(currName));
-							memcpy(filenameStack[currPtr-1],currName,strlen(currName));
+							filenameStack[currPtr-1] = malloc(strlen(currName)+1);
+							strcpy(filenameStack[currPtr-1],currName);
 							filenameStack[currPtr-1][strlen(currName)] = '\0';
-							memcpy(currName,name,length);
+							strcpy(currName,name);
 							currName[length] = '\0';
 							free(name);
 							//save the lineno
@@ -516,6 +558,5 @@ void setupInclude(){
 							yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
 
 }
-
 
 

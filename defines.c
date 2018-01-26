@@ -25,6 +25,8 @@
 #include <string.h>
 #include <stdio.h>
 
+
+
  int allocDefine(define* def, char* identifier, char* text){
 	if(def == NULL){
 		return -1;
@@ -54,7 +56,10 @@
  };
  
  int compareDefs(define* def1, char* identifier){
-	return strcmp(def1->identifier,identifier);
+	 if(def1->identifier != NULL){
+		return strcmp(def1->identifier,identifier);
+	}
+		return -1;
  };
  
  
@@ -80,6 +85,11 @@
 		if(cycleCheck(&def_arr->array[i], def)){
 			fprintf(stderr, "Error cycle detected\n");
 			exit(1);
+		}
+		//check if alreadydefined. 
+		if(strcmp(def_arr->array[i].identifier, def->identifier) == 0){
+			fprintf(stderr, "Error identifier already defined\n");
+			return;
 		}
 	}
 	if(def != NULL){
