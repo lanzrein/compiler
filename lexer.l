@@ -21,11 +21,22 @@ void setupInclude();
 
 //this is for our parsing of include.
 #define MAX_INCLUDE_DEPTH 1024
-YY_BUFFER_STATE includes_stack[MAX_INCLUDE_DEPTH];
-char* filenameStack[MAX_INCLUDE_DEPTH];
-int linenoStack[MAX_INCLUDE_DEPTH];
-
+/**
+ *@brief this structure contains data about a yybuffer
+ *@param buffer the buffer
+ *@param filename the filename of the buffer
+ *@param lineno current line number
+ */
+typedef struct{
+	YY_BUFFER_STATE buffer;
+	char* filename;
+	int lineno;
+}buffer_data;
+//A stack for our buffers to handle includes.
+buffer_data buffer_stack[MAX_INCLUDE_DEPTH];
+//the current name of the file being read
 char* currName;
+//a pointer to the top of all the stacks (since all of them are linked
 int currPtr = 0;
 
 
@@ -422,7 +433,7 @@ ENDIF #endif
 {DPIPE}	{prettyprint(currName,yylineno,42,yytext);}
 {DAMP}	{prettyprint(currName,yylineno,43,yytext);}
 
-[ \t]* /* discard white*/
+[ \t]+ /* discard white*/
 \n 	{yylineno++;}
 
 
@@ -458,19 +469,19 @@ ENDIF #endif
 				}else{
 					currPtr--;
 					//buffer change
+					buffer_data buf_dat = buffer_stack[currPtr];
 					yy_delete_buffer(YY_CURRENT_BUFFER);
-					yy_switch_to_buffer(includes_stack[currPtr]);
-					//name change.
-					currName = realloc(currName,strlen(filenameStack[currPtr])+1);
-					strcpy(currName,filenameStack[currPtr]);
-					//get yylineno
-					yylineno = linenoStack[currPtr];
+					currName = realloc(currName,strlen(buf_dat.filename));
+					strcpy(currName,buf_dat.filename);
+					yylineno = buf_dat.lineno;
+					yy_switch_to_buffer(buf_dat.buffer);
+					
 					
 				}
 			}
 			}
 			
-[.^\n]	{fprintf(stderr,"File %s Line %d Unexpected token \'%s\'\n",currName,yylineno,yytext);}
+"£"		{fprintf(stderr,"File %s Line %d Unexpected token \'%s\'\n",currName,yylineno,yytext);}
 
 %%
 
@@ -509,55 +520,59 @@ int main(int argc, char** argv)
 void setupInclude(){
 	//check for max depth
 	if(currPtr >= MAX_INCLUDE_DEPTH){
-	fprintf(stderr,"Reached max include depth!");
-	BEGIN(INITIAL);
+		fprintf(stderr,"Reached max include depth!");
+		BEGIN(INITIAL);
 	}
-							if(debug){printf("Starting to include new file %s\n",yytext);}
-							int length = strlen(yytext)-2;
-							//check if valid name..
-							if(length<0){
-								fprintf(stderr,"Length of file name is not long enough.\n");
-								BEGIN(INITIAL);
-							}
-							//take the name and remove the quotes
-							char* name = malloc(length+1);
-							memcpy(name,yytext+1,length);
-							name[length] = '\0';
+	if(debug){printf("Starting to include new file %s\n",yytext);}
+		int length = strlen(yytext)-2;
+		//check if valid name..
+		if(length<0){
+			fprintf(stderr,"Length of file name is not long enough.\n");
+			BEGIN(INITIAL);
+		}
+		//take the name and remove the quotes
+		char* name = malloc(length+1);
+		memcpy(name,yytext+1,length);
+		name[length] = '\0';
+		
+							
+		//check for cycles...
+		for(int idx = 0; idx < currPtr; idx++){
+			if(strcmp(name,buffer_stack[idx].filename)==0){
+				fprintf(stderr,"Include cycle detected ! %s name is in a cycle. Aborting\n",name);
+				exit(1);
+			}
+		}
+		buffer_data buf_dat;
+		buf_dat.buffer = YY_CURRENT_BUFFER;
+		
+												
+		if(debug){printf("Name : %s\n",name);}
 							
 							
-							//check for cycles...
-							for(int idx = 0; idx < currPtr; idx++){
-								if(strcmp(name,filenameStack[idx])==0){
-									fprintf(stderr,"Include cycle detected ! %s name is in a cycle. Aborting\n",name);
-									exit(1);
-								}
-							}
-							
-							includes_stack[currPtr++] = YY_CURRENT_BUFFER;
-							
-							if(debug){printf("Name : %s\n",name);}
-							
-							
-							yyin = fopen(name,"r");
-							if(NULL==yyin){
-								fprintf(stderr,"Could not open file : %s will continue to read from current file. \n",name);
-								yy_switch_to_buffer(includes_stack[currPtr]);
-								currPtr--;
-								BEGIN(INITIAL);
-							}
-							//set the file name.
-							filenameStack[currPtr-1] = malloc(strlen(currName)+1);
-							strcpy(filenameStack[currPtr-1],currName);
-							filenameStack[currPtr-1][strlen(currName)] = '\0';
-							strcpy(currName,name);
-							currName[length] = '\0';
-							free(name);
-							//save the lineno
-							linenoStack[currPtr-1] = yylineno;
-							yylineno = 1;
-							
-							
-							yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
+		yyin = fopen(name,"r");
+		if(NULL==yyin){
+			fprintf(stderr,"Could not open file : %s will continue to read from current file. \n",name);
+			//yy_switch_to_buffer(includes_stack[currPtr]);
+			
+			currPtr--;
+			BEGIN(INITIAL);
+		}
+		//set the file name.
+		buf_dat.filename = malloc(strlen(currName)+1);
+		strcpy(buf_dat.filename,currName);
+		
+		strcpy(currName,name);
+		currName[length] = '\0';
+		free(name);
+		
+		//save the lineno
+		buf_dat.lineno = yylineno;
+		
+		//save the new buffer data on the stack. 
+		buffer_stack[currPtr++] = buf_dat;
+		yylineno = 1;
+		yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
 
 }
 

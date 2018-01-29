@@ -29,7 +29,12 @@
   * @return 0 if the identifier is the same. != 0 else */
  int compareDefs(define* def1, char* identifier);
  
-  
+  /**
+   * @brief a data structure to help simulate a list. 
+   * @param cursor the next available slot
+   * @param allocatedDefs how many defs are available
+   * @param array the actual array of defines
+   * */
   typedef struct {
 	int cursor;
 	int allocatedDefs;

@@ -10,6 +10,11 @@ struct token_translate{
 	const char* pattern;
 };
 
+typedef struct {
+	char* id;
+	char* content;
+}token;
+
 const char * const TOKENS_MESSAGES[NUM_TOKENS];
 
 const struct token_translate TOKENS_MAP[NUM_TOKENS];
@@ -19,3 +24,5 @@ void prettyprint(char* file,int lineno, int tokenIdx, char* text);
 void processString(char* file, int lineno, char* string);
 
 void processChar(char* file,int lineno,char* string);
+
+void createToken(char* id, char* content, token* tok);

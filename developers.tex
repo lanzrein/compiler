@@ -1,8 +1,11 @@
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{url}
+\usepackage{listings}
+\usepackage{hyperref}
 
-\title{COM S 440 Project part 0}
+
+\title{COM S 440 Project}
 \author{Johan Lanzrein}
 \date{January 2018}
 
@@ -10,9 +13,144 @@
 
 \maketitle
 
-\section{Information about developer}
+\section{Part 0 : Information about developer}
 
 Name : Johan Lanzrein \\
 URL for SSH : \url{git@git.linux.iastate.edu:lanzrein/coms440.git} \\
 URL for HTTPS : \url{https://git.linux.iastate.edu/lanzrein/coms440.git}
+
+
+
+\section{Part 1 : Lexer}
+\subsection{Basic design}
+We use the flex library to help us proceed the parsing. The repository for the library can be found here : \url{https://github.com/westes/flex}. The lexer is build using Makefile. Meaning a simple make builds the executable lexer that can be used as is. You need to have the flex library installed to be able to build the project. 
+When launching the executable you can specify an argument that will be the file to be read from :  \begin{lstlisting}[language=bash]
+./lexer <file> [debug]
+\end{lstlisting}
+Where file is the name of the file to read from. If no argument is given it will read from the standard input. You can also add the keyword debug at the end to have a more extensive report of how the file is read. This is mainly used when trying to find bugs. \\ \\
+The flex library makes most the work when it comes to handling input files. Hence we only have to work on the how to process every token. \\ Therefore all of the parsing and processing is done in the $lexer.l$ file which is divided in four parts : Top, Definition, Rules and User Code.
+\\subsubsection{Top}
+This part contains all of the included library and files. 
+It also contains a few global variables to help handling the preprocessing of \#include , \#define and \#ifdef. 
+Finally it has a few prototype for helper functions. 
+\subsubsection{Definition}
+In here we define all of our regular expressions. Each one of them represents a token type. For example : 
+\begin{lstlisting}[language=C]
+IDENT [_a-zA-Z][_a-zA-Z0-9]*
+\end{lstlisting}
+ 
+We also define several states that will be of use for when we are including a file. The states are created like this : 
+\begin{lstlisting}[language=C]
+\%x INCLUDECND
+\end{lstlisting}
+\subsubsection{Rules}
+This section contains all the rules on how we should act when we encounter every pattern defined in the previous section. Most of the patterns are just an instruction to print with a certain format on the standard output. 
+Some other rules like the include, define, idef preprocessing instructions are longer. 
+\begin{lstlisting}[language=C]
+{LPAR}  {/*rule goes here */}
+\end{lstlisting}
+\subsubsection{User code}
+This final part contains the main method from where the code is executed. There is also a helper function to help setting up include instructions. 
+This is standard C code. 
+
+
+\subsection{Files and description}
+\label{definition}
+\begin{description}
+\item[lexer.l]
+This is the file that will be processed by the flex library. We already described it in the previous section. However, we will insist on how it works when encountering preprocessing instructions in the next section. 
+\item[tokens.c/tokens.h]
+This file contains helper functions to print in a neat way what the lexer finds. It also has a few data structures that represents tokens. 
+\item[defines.c/defines.h]
+A helper file to take care of the defines preprocessing instructions. It has a data structure and helper methods.
+\item[Makefile]
+The Makefile helps to build the project with a single command. Nothing very special there. We also have a cleaning option available if you want to remove the intermediate files type "Make clean". 
+\item[readme.md]
+A readme that describes the files and how to build the lexer. 
+\end{description}
+\subsection{Data structures}
+\subsubsection{Lexer.l}
+\label{sec:lexerData}
+\begin{lstlisting}[language=C]
+ /**
+ *@brief this structure contains data about a yybuffer
+ *@param buffer the buffer
+ *@param filename the filename of the buffer
+ *@param lineno current line number
+ */
+typedef struct{
+	YY_BUFFER_STATE buffer;
+	char* filename;
+	int lineno;
+}buffer_data;
+//A stack for our buffers to handle includes.
+buffer_data buffer_stack[MAX_INCLUDE_DEPTH];
+//Pointer to the current top of the stack 
+int currPtr = 0;
+
+\end{lstlisting}
+
+For defines and if preprocessing, we also have data structures but they are both stacks with different names just like the buffer\_stack. Hence they are not shown here. 
+\subsubsection{Tokens.h}
+\begin{lstlisting}[language=C]
+/**
+ *@brief a structure to represent a token with its id and content
+ */
+struct token{
+	const char* id;
+	const char* content;
+};
+/*
+ *@brief the id of the tokens
+ */
+const char * const TOKENS_MESSAGES[NUM_TOKENS];
+
+\end{lstlisting}
+\subsubsection{defines.h}
+\label{sec:defineData}
+\begin{lstlisting}[language=C]
+ /**
+  * @struct a basic structure to hold our defines. 
+  * @param identifier the identifier of the define
+  * @param arbitraryText of the identifier
+  * */
+ typedef struct {
+	 char* identifier;
+	 char* arbitraryText;
+ }define;
+ 
+   /**
+   * @struct a data structure to help simulate a list. 
+   * @param cursor the next available slot
+   * @param allocatedDefs how many defs are available
+   * @param array the actual array of defines
+   * */
+  typedef struct {
+	int cursor;
+	int allocatedDefs;
+	define array[MAX_DEFINES];  
+  }define_array;
+  
+\end{lstlisting}
+
+\subsection{Specific methods used}
+\subsubsection{Preprocessing includes}
+All of the preprocessing of includes is done in the lexer.l file. Our lexer handles only the cases when the include is in a specific format. All other formating will lead to an error. 
+The format expected is as follows : 
+\begin{lstlisting}[language=C]
+ #include "file.c" //file.c is the file to be included. 
+\end{lstlisting}
+Our include preprocessing can handle nesting of up to 1024 recursive calls, and will automatically detect include cycles. \\
+How the program works is that it will maintain a stack (described in \autoref{sec:lexerData}) and will automatically update it as it encounters new include instruction or end-of-files. To detect cycles, it will check for name collisions and if a collision is encountered the whole program is exited. \\
+This corresponds to coding the bonus parts of the assignment concerning include. 
+\subsubsection{Preprocessing defines}
+We have already described the data structures used to help working with defines (\autoref{sec:defineData}). 
+When encountering defines instructions, the appropriate define data structure will be created and added to the list. On the other side when there is an undef instruction, the array is scaned and the corresponding define is removed. 
+The program will check to not have twice the same identifier for a define and also for cycles very minimally. 
+Moreover this does not entirely cover the requirement for the bonus part as it can only process 1024 defines total and all further defines will be ignored. A future fix for this would be to implement a linked list with pointers. 
+\subsubsection{Preprocessing if}
+Preprocessing if instructions is straight forward. When encountering an ifdef, we check if it is or not defined, and if it is continue scanning until and else or endif is encountered. In the other case we activate an option that forces to ignore furter input until and else or endif is encountered. \\
+If encountering and else we do the opposite of what was done before ( ignoring $\Rightarrow$ reading, reading $\Rightarrow$ ignoring). If an endif is encountered, we set all flags used to 0 and continue reading. \\
+In case of nested ifs, there is a stack that can handle at what level we are and what instructions to ignore. 
+Note that if there is more than one else in our code, the lexer will not be able to handle those cases efficiently. As they should not appear. 
 \end{document}

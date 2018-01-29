@@ -66,7 +66,7 @@ const struct token_translate TOKENS_MAP[] = {
 	 {"IDENT","[_a-zA-Z][_a-zA-Z0-9]*"},//not start with digit. 
 	 
 	 {"INTCONST","[0-9]*"},
-	 {"REALCONST",""},
+	 {"REALCONST","([-+]?[0-9]+(\\.[0-9]?)+([eE][-+]?[0-9]+)?)|([-+]?\\.[0-9]+([eE][-+]?[0-9]+)?)"},
 	 {"STRCONST","\"(\\.|[^\\\"])*\""},
 	 {"CHARCONST","\'.\'"},
 	  
@@ -113,4 +113,38 @@ void processChar(char* file, int lineno, char* yytext){
 		printf("File %s Line %d Token %s \'%c\'\n",file,lineno,TOKENS_MAP[13].translation,yytext[1]);	
 
 	
+}
+
+/**
+ * NOT USED YET 
+ * @brief this method allocates memory and creates a token
+ * @param id the id
+ * @param content the content of the token
+ * @param tok (OUT) the token created
+ * */
+void createToken(char* id, char* content, token* tok){
+	if(id == NULL || content == NULL){
+		return;
+	}
+	
+	tok = malloc(sizeof(token));
+	tok->id = malloc(strlen(id));
+	strcpy(tok->id,id);
+	
+	tok->content = malloc(strlen(content));
+	strcpy(tok->content,content);
+	
+}
+
+/**
+ * NOT USED YET
+ * @brief frees the memory used by a token
+ * @param tok the token to free
+ * */
+void freeToken(token* tok){
+	free(tok->id);
+	free(tok->content);
+	free(tok);
+	tok = NULL; //TODO not sure if neede
+	return;
 }
