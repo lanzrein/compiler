@@ -148,3 +148,4 @@ void freeToken(token* tok){
 	tok = NULL; //TODO not sure if neede
 	return;
 }
+

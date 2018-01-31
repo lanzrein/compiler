@@ -74,8 +74,8 @@ CONTINUE continue
 RETURN return
 
 IDENT [_a-zA-Z][_a-zA-Z0-9]*
-INTCONST [-+]?[0-9]+
-REALCONST ([-+]?[0-9]+(\.[0-9]?)+([eE][-+]?[0-9]+)?)|([-+]?\.[0-9]+([eE][-+]?[0-9]+)?)
+INTCONST [0-9]+
+REALCONST ([0-9]+(\.[0-9]*)?([eE][-+]?[0-9]+)?)|(\.[0-9]+([eE][-+]?[0-9]+)?)
 STRCONST \"(\\.|[^\\"])*\"
 CHARCONST \'.\'
 
@@ -480,8 +480,7 @@ ENDIF #endif
 				}
 			}
 			}
-			
-"£"		{fprintf(stderr,"File %s Line %d Unexpected token \'%s\'\n",currName,yylineno,yytext);}
+[^ \t\r\s\n]		{printf("File %s Line %d Unexpected token '%s'\n", currName, yylineno, yytext);	}
 
 %%
 
