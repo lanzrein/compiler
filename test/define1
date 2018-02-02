@@ -1,5 +1,0 @@
-#define EXAMPLE "This is an example"
-
-#define TEST blibli blo 
-
-#undef EXAMPLE
