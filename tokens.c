@@ -28,15 +28,13 @@
 
 /**
  * @file tokens.c
- * @brief contains the keywords for our lexer
+ * @brief contains the keywords for our lexer and a few utility method to pretty print them 
  * */
  
 
- /**
-  * the message for the keywords.
-  * So we can refer to them with the help of the enum refered in 
-  * tokens.h
-  * */
+/**
+ * @struct an array that contains the ID of all tokens. 
+ * */
  const char * const TOKENS_MESSAGES[] = {
 	 "TYPE","FOR","WHILE","DO","IF","ELSE",
 	 "BREAK","CONTINUE","RETURN",//keywords
@@ -49,51 +47,24 @@
 	 "PIPE","AMP","BANG","DPIPE","DAMP"//logic
 };
 
+
 /**
- * A map that corresponds the pattern to the token
+ * @brief pretty prints a token  
+ * @param file the filename
+ * @param lineno current line number
+ * @param tokenIdx the index of the token according to our table. (TOKENS_MESSAGES)
+ * @param text the content of the token
  * */
-const struct token_translate TOKENS_MAP[] = {
-	 {"TYPE","(char)|(int)|(float)"},
-	 {"FOR","(for)"},
-	 {"WHILE","(while)"},
-	 {"DO","(do)"},
-	 {"IF","(if)"},
-	 {"ELSE","(else)"},
-	 {"BREAK","(break)"},
-	 {"CONTINUE","(continue)"},
-	 {"RETURN","(return)"},//keywords
-	 
-	 {"IDENT","[_a-zA-Z][_a-zA-Z0-9]*"},//not start with digit. 
-	 
-	 {"INTCONST","[0-9]*"},
-	 {"REALCONST","([-+]?[0-9]+(\\.[0-9]?)+([eE][-+]?[0-9]+)?)|([-+]?\\.[0-9]+([eE][-+]?[0-9]+)?)"},
-	 {"STRCONST","\"(\\.|[^\\\"])*\""},
-	 {"CHARCONST","\'.\'"},
-	  
-	 {"LPAR","("},{"RPAR",")"},
-	 {"LBRACKET","["},{"RBRACKET","]"},
-	 {"LBRACE","{"},{"RBRACE","}"},//()[]{}
-	 
-	 {"COMMA",","},{"SEMI",";"},
-	 {"QUEST","?"},{"COLON",":"},//punct,
-	 
-	 {"EQUALS","=="},{"NEQUAL","!="},
-	 {"GT",">"},{"GE",">="},
-	 {"LT","<"},{"LE","<="},
-	 {"ASSIGN","="},{"INCR","++"},{"DECR","--"},//gt,ge..
-	 {"PLUS","+"},{"MINUS","-"},{"STAR","*"},
-	 {"SLASH","/"},{"MOD","%"},{"TILDE","~"},//math
-	 {"PIPE","|",},{"AMP","&"},
-	 {"BANG","!"},
-	 {"DPIPE","||"},{"DAMP","&&"}//logic
-};
-
-
 void prettyprint(char* file,int lineno, int tokenIdx, char* text){
-	printf("File %s Line %d Token %s \'%s\'\n",file,lineno,TOKENS_MAP[tokenIdx].translation,text);	
+	printf("File %s Line %d Token %s \'%s\'\n",file,lineno,TOKENS_MESSAGES[tokenIdx],text);	
 }
 
-
+/**
+ * @brief processes a C-string and pretty prints it. 
+ * @param file the filename
+ * @param lineno current line number
+ * @param string the string
+ * */
 void processString(char* file, int lineno, char* yytext){
 				
 				if(strlen(yytext) >= 2){
@@ -108,9 +79,15 @@ void processString(char* file, int lineno, char* yytext){
 	
 }
 
+/**
+ * @brief processes a char and pretty prints it. 
+ * @param file the filename
+ * @param lineno current line number
+ * @param string a pointer to the char. 
+ * */
 void processChar(char* file, int lineno, char* yytext){
 	
-		printf("File %s Line %d Token %s \'%c\'\n",file,lineno,TOKENS_MAP[13].translation,yytext[1]);	
+		printf("File %s Line %d Token %s \'%c\'\n",file,lineno,TOKENS_MESSAGES[13],yytext[1]);	
 
 	
 }
@@ -145,7 +122,6 @@ void freeToken(token* tok){
 	free(tok->id);
 	free(tok->content);
 	free(tok);
-	tok = NULL; //TODO not sure if neede
 	return;
 }
 

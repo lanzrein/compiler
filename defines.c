@@ -1,42 +1,28 @@
-/*
- * defines.c
- * 
- * Copyright 2018 johan <johan@LAPTOP-1SRG13AD>
- * 
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- * MA 02110-1301, USA.
- * 
- * 
- */
+/**
+ * @file defines.c 
+ * @brief a file that holds data structures and method to help with the parsing of defines
+ * */
 #include "defines.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 
-
+   /**
+  * @brief allocates memory for a define
+  * @param def the define to allocate
+  * @param identifier the identifier of the define
+  * @param text the text of the define
+  * @return 0 success < 0 on error */
  int allocDefine(define* def, char* identifier, char* text){
 	if(def == NULL){
 		return -1;
 	}
 	def->identifier = malloc(strlen(identifier)+1);
 	strcpy(def->identifier,identifier);
-	def->identifier[strlen(identifier)] = '\0';
 	def->arbitraryText = malloc(strlen(text)+1);
 	strcpy(def->arbitraryText,text);
-	def->arbitraryText[strlen(text)] = '\0';
 	
 	if(def->arbitraryText == NULL || def->identifier == NULL){
 		return -1;
@@ -46,7 +32,11 @@
 	 
 	 
  };
- 
+
+ /**
+  * @brief frees the memory of a pointer on a define
+  * @param def the define to free
+  * */
  void freeDefine(define* def){
 		free(def->identifier);
 		free(def->arbitraryText);
@@ -54,7 +44,12 @@
 		return;
 	 
  };
- 
+
+ /**
+  * @brief compares the identifier with a define. 
+  * @param def1 first define
+  * @param identifier 
+  * @return 0 if the identifier is the same. != 0 else */
  int compareDefs(define* def1, char* identifier){
 	 if(def1->identifier != NULL){
 		return strcmp(def1->identifier,identifier);
@@ -63,6 +58,19 @@
  };
  
  
+ /**
+  * @brief init initializes the def_arr. 
+  * @param def_ar the array to initialize
+  * */
+ void initArray(define_array* def_arr){
+
+	if(!def_arr){
+		fprintf(stderr,"Error no mem\n");	
+		return ;
+	}
+	def_arr->size = 0;
+	def_arr->array = NULL;
+}
  
  
   /**
@@ -71,16 +79,13 @@
   * @param def the define to add
   * */
  void addNode(define_array* def_arr, define* def){
-	
-	
-	
-	int idx = def_arr->cursor;
+	int idx = def_arr->size;
 	if(idx == MAX_DEFINES){
 		fprintf(stderr, "Error, reached max define's number.\n");
 		return;
 	}
 	
-	for(int i = 0; i < def_arr->allocatedDefs; i++){
+	for(int i = 0; i < def_arr->size; i++){
 		//check for cycles..
 		if(cycleCheck(&def_arr->array[i], def)){
 			fprintf(stderr, "Error cycle detected\n");
@@ -92,49 +97,71 @@
 			return;
 		}
 	}
-	if(def != NULL){
-		def_arr->array[idx] = *def;
-		def_arr->allocatedDefs ++;
-		//~ while(idx < MAX_DEFINES || (def_arr.array[idx] != NULL)){
-			//~ //update the cursor
-			//~ idx++;
-		//~ }
-		idx++;
-		def_arr->cursor = idx;
-		
+	
+	
+	//else create the node and get add it. 
+	
+	define* copy;
+	copy = malloc(sizeof(define));
+	allocDefine(copy,def->identifier,def->arbitraryText);
+
+	define* newArray;
+	newArray = realloc(def_arr->array, (idx+1)*sizeof(define));
+	if(!newArray){
+		fprintf(stderr, "Error out of memory\n");
+		return;
 	}
+	newArray[idx] = *copy;
+	def_arr->array = newArray;
+	def_arr->size++;
 	return;
 	 
 	 
   };
+  
  /**
   * @brief removes the define from the list. 
   * @param head pointer to the head
   * @param def the define to remove 
   * */
  void removeNode(define_array* def_arr, char* identifier){
-	 int count = 0;
-	 for(int i = 0; i < MAX_DEFINES || count < def_arr->allocatedDefs;i++){
-		 //~ if(def_arr.array[i] != 0){
-			 count++;
-			 if(compareDefs(&def_arr->array[i],identifier) == 0){
-				 //its the one. 
-				 //~ def_ar.cursor = i;
-				 memset(&def_arr->array[i],0, sizeof(define));
-				 def_arr->allocatedDefs--;
-				 break;
-			 }
-		 
-		 //~ }
+	 
+
+	size_t newSize = def_arr->size -1;
+	define* newArray;
+	newArray = malloc(newSize*sizeof(define));
+	
+	if(!newArray){
+		fprintf(stderr, "Error no memory\n");
+		return;
+	}
+	
+	int offset = 0;
+	for(int i = 0; i < def_arr->size ;i++){
+		 if(strcmp(identifier,def_arr->array[i].identifier) != 0){
+			newArray[i+offset] = def_arr->array[i];
+		 }else{
+			 offset = -1;
+		 }
 	 }
+	 
+	 def_arr->array = newArray;
+	 def_arr->size--;
+	 
+	 return;
 	  
  }
  
  
  
- 
-int   findIdentifier(define_array* def_arr, char* identifier){
-	 for(int i = 0; i < def_arr->cursor; i++){
+   /**
+   * @brief tries to match an identifier to the one we have defined. 
+   * @param der_arr the define array to search from
+   * @param identifier the identifier to match
+   * @param the index of the identifier if there is a match ; <0 else. 
+   * */
+int findIdentifier(define_array* def_arr, char* identifier){
+	 for(int i = 0; i < def_arr->size; i++){
 		if(compareDefs(&def_arr->array[i] , identifier) ==0){
 			return i;
 			
@@ -147,7 +174,12 @@ int   findIdentifier(define_array* def_arr, char* identifier){
 	 
  }
 
-
+ /**
+  * @brief check for a cycle between two define !!!! ONLY BASIC CYCLES
+  * @param def1 
+  * @param def2 
+  * @return 1 if cycle, 0 else
+  * */
  int cycleCheck(define* def1, define* def2){
 	 char* ident1 = def1->identifier;
 	 char* ident2 = def2->identifier;

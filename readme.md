@@ -10,8 +10,8 @@
 
 ### Building instructions : 
 - make
-- ./lexer <file> 
+- ./lexer file  
 
-####Notes : 
+#### Notes : 
 - If treating files that are in different directories and have includes the includes need to have the name of the path from where the lexer is launched. 
 - The building with make will produce a few warnings, for implicitly declaring and not using some variables. Disregard those warnings, as I did not need the variables. 

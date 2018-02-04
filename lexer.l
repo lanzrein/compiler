@@ -43,7 +43,7 @@ int currPtr = 0;
 //This is for our define parsing. 
 char* identifier; 
 char currentText[MAX_DEFINE_LENGTH]; 
-define_array def_array = {0,0,};
+define_array def_array;
 #define MAX_DEFINE_DEPTH MAX_INCLUDE_DEPTH
 YY_BUFFER_STATE initBuffer;
 YY_BUFFER_STATE substitutionStack[MAX_DEFINE_DEPTH];
@@ -56,6 +56,7 @@ int ifdefPtr = 0;
 int ifdef = 0;
 int ifStack[MAX_NESTING];
 int readingif = 0;
+int elseFlag = 0;
 
 
 
@@ -222,6 +223,11 @@ ENDIF #endif
 						}
 					}
 <IFIGNORE>{ELSEDEF}	{if(debug){printf("Else preprocess. Changing our flags\n");}
+					 if(elseFlag){
+						fprintf(stderr, "Error, more than one else in the file ! Aborting parsing\n");
+						return 0;
+					}
+					 elseFlag = 1;
 					 if(readingif > 0){
 						//we were reading so we stop. 
 						//SHOULD NOT HAPPEN
@@ -239,8 +245,9 @@ ENDIF #endif
 
 {ENDIF}		{if(readingif == 0){
 				fprintf(stderr,"Error, endif encountered outside of an if\n");BEGIN(INITIAL);
-				
+				return 0;
 				}else{
+					elseFlag = 0;
 					if(ifdefPtr == 0){
 						//no more ifs to read. 
 						readingif = 0;
@@ -284,7 +291,7 @@ ENDIF #endif
 			 BEGIN(INITIAL);
 			 }
 				
-{DEFINE}	{if(debug){printf("new define encoutered\n");}if(def_array.cursor > MAX_DEFINES){fprintf(stderr,"Error too many defines\n");}else{BEGIN(DEFINECND);}}
+{DEFINE}	{if(debug){printf("new define encoutered\n");}if(def_array.size > MAX_DEFINES){fprintf(stderr,"Error too many defines\n");}else{BEGIN(DEFINECND);}}
 <DEFINECND>[ \t]* /* discard white */
 <DEFINECND>{IDENT} {
 					  identifier = malloc(strlen(yytext)+1);
@@ -364,8 +371,7 @@ ENDIF #endif
 
 {IDENT}		{	int ident = findIdentifier(&def_array,yytext);
 				if(ident >= 0){
-				if(debug){printf("Found matching ident for %s\n", yytext);
-				}
+				if(debug){printf("Found matching ident for %s\n", yytext);}
 				//print the out..
 				if(substitutionPointer > MAX_DEFINE_DEPTH){
 					fprintf(stderr, "Error, reached max define depth\n");
@@ -488,6 +494,8 @@ ENDIF #endif
 
 int main(int argc, char** argv)
 {
+initArray(&def_array);
+
   if(argc > 1){
 	//there is a file to open
 	yyin = fopen(argv[1],"r");

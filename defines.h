@@ -20,7 +20,10 @@
   * @param text the text of the define
   * @return 0 success < 0 on error */
  int allocDefine(define* def, char* identifier, char* text);
- 
+ /**
+  * @brief frees the memory of a pointer on a define
+  * @param def the define to free
+  * */
  void freeDefine(define* def);
  /**
   * @brief compares the identifier with a define. 
@@ -31,17 +34,21 @@
  
   /**
    * @brief a data structure to help simulate a list. 
-   * @param cursor the next available slot
-   * @param allocatedDefs how many defs are available
+   * @param size how many defines are done. 
    * @param array the actual array of defines
    * */
   typedef struct {
-	int cursor;
-	int allocatedDefs;
-	define array[MAX_DEFINES];  
+	int size;
+	define* array;  
   }define_array;
-  
 
+
+ /**
+  * @brief init initializes the def_arr. 
+  * @param def_ar the array to initialize
+  * */
+ void initArray(define_array* def_arr);
+ 
  /**
   * @brief add a define to our list. 
   * @param the head 
@@ -60,9 +67,20 @@
   * */
  void freeAll(define_array *def_arr);
   
+  /**
+   * @brief tries to match an identifier to the one we have defined. 
+   * @param der_arr the define array to search from
+   * @param identifier the identifier to match
+   * @param the index of the identifier if there is a match ; <0 else. 
+   * */
  int findIdentifier(define_array* def_arr, char* identifier);
 
- 
+ /**
+  * @brief check for a cycle between two define !!!! ONLY BASIC CYCLES
+  * @param def1 
+  * @param def2 
+  * @return 1 if cycle, 0 else
+  * */
  int cycleCheck(define* def1, define* def2);
  
  
