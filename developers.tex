@@ -119,17 +119,16 @@ const char * const TOKENS_MESSAGES[NUM_TOKENS];
 	 char* arbitraryText;
  }define;
  
-   /**
-   * @struct a data structure to help simulate a list. 
-   * @param cursor the next available slot
-   * @param allocatedDefs how many defs are available
+  /**
+   * @brief a data structure to help simulate a VLA ( like ArrayList ) 
+   * @param size how many defines are done. 
    * @param array the actual array of defines
    * */
   typedef struct {
-	int cursor;
-	int allocatedDefs;
-	define array[MAX_DEFINES];  
+	int size;
+	define* array;  
   }define_array;
+
   
 \end{lstlisting}
 
@@ -146,11 +145,9 @@ This corresponds to coding the bonus parts of the assignment concerning include.
 \subsubsection{Preprocessing defines}
 We have already described the data structures used to help working with defines (\autoref{sec:defineData}). 
 When encountering defines instructions, the appropriate define data structure will be created and added to the list. On the other side when there is an undef instruction, the array is scaned and the corresponding define is removed. 
-The program will check to not have twice the same identifier for a define and also for cycles very minimally. 
-Moreover this does not entirely cover the requirement for the bonus part as it can only process 1024 defines total and all further defines will be ignored. A future fix for this would be to implement a linked list with pointers. 
+The program will check to not have twice the same identifier for a define and also for cycles very minimally. The program also supports recursive calls of define up to a depth of maximum 1028. 
 \subsubsection{Preprocessing if}
 Preprocessing if instructions is straight forward. When encountering an ifdef, we check if it is or not defined, and if it is continue scanning until and else or endif is encountered. In the other case we activate an option that forces to ignore furter input until and else or endif is encountered. \\
 If encountering and else we do the opposite of what was done before ( ignoring $\Rightarrow$ reading, reading $\Rightarrow$ ignoring). If an endif is encountered, we set all flags used to 0 and continue reading. \\
 In case of nested ifs, there is a stack that can handle at what level we are and what instructions to ignore. 
-Note that if there is more than one else in our code, the lexer will not be able to handle those cases efficiently. As they should not appear. 
 \end{document}
