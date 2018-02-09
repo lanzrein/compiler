@@ -492,6 +492,37 @@ ENDIF #endif
 
 
 
+int main(int argc, char** argv)
+{
+initArray(&def_array);
+
+  if(argc > 1){
+	//there is a file to open
+	yyin = fopen(argv[1],"r");
+	//will be freed in process <<EOF>>
+	currName = malloc(strlen(argv[1])+1);
+	strcpy(currName,argv[1]);
+	if(NULL==yyin){
+		fprintf(stderr,"Error file %s can't be opened\n",argv[1]);
+		exit(1);
+	}
+	if(argc > 2){
+		if(strcmp(argv[2],"debug")==0){
+			debug = 1;
+		}
+			
+	}
+	//file was opened
+	if(debug){printf("Opening file : %s\n", argv[1]);}
+	yylex();
+	fclose(yyin);
+  }else{
+	yylex();	
+	return 0;
+  }
+}
+
+
 
 void setupInclude(){
 	//check for max depth

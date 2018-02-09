@@ -3,13 +3,10 @@ CC=gcc
 CFLAGS+= -std=c99 -Wall -g
 LDFLAGS+= -lfl
 
-all: parser clean
+all: lexer clean
 
-parser: lex.yy.c parser.c tokens.o defines.o
+lexer: lex.yy.c tokens.o defines.o
 	gcc $(CFLAGS) -o lexer lex.yy.c tokens.o defines.o $(LDFLAGS)
-
-parser.c: parser.y
-	bison -d parser.y
 
 lex.yy.c: lexer.l
 	flex lexer.l
