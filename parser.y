@@ -2,14 +2,18 @@
 %{
 	//C declarations..
 	#include <stdio.h>
-	#include <defines.h>
+	#include <string.h>
+	#include <stdlib.h>
+	#include "defines.h"
 	
 	//need this stuff from flex to know about
-	extern "C" int yylex();
-	extern "C" int yyparse();
-	extern "C" FILE *yyin;
+	extern int yylex();
+	extern int yyparse();
+	extern FILE *yyin;
 	extern define_array def_array;
-
+	extern char* currName;
+	extern int debug;
+	void yyerror (char const *s);
 	
 	
 %}
@@ -36,83 +40,105 @@
 %token RBRACKET
 %token LBRACE
 %token RBRACE
-%token COMMA
 %token SEMI
 %token QUEST
 %token COLON
-%token EQUALS
-%token NEQUAL
+
+
+
+%token BANG
+%token TILDE
+%token MINUS
+%token INCR
+%token DECR
+
+%token STAR
+%token SLASH
+%token MOD
+
+%token PLUS
+
 %token GT
 %token GE
 %token LT
 %token LE
-%token ASSIGN
-%token INCR
-%token DECR
-%token PLUS
-%token MINUS
-%token STAR
-%token SLASH
-%token MOD
-%token TILDE
-%token PIPE
-%token AMP
-%token BANG
-%token DPIPE
-%token DAMP
 
+%token EQUALS
+%token NEQUAL
+
+%token AMP
+%token DAMP
+%token PIPE
+%token DPIPE
+%token ASSIGN
+%token COMMA
+
+
+//we set the associativity left to right or right to left..
+%left LPAR RPAR STAR SLASH MOD PLUS MINUS GT GE LT LE EQUALS NEQUAL
+%left  AMP PIPE DAMP DPIPE COMMA
+/*
+Operator precedence is determined by the 
+line ordering of the declarations; the higher the line number 
+of the declaration (lower on the page or screen), 
+the higher the precedence. 
+From : https://www.gnu.org/software/bison/manual/html_node/Infix-Calc.html#Infix-Calc */
 %start program 
 
 %% 
 //Grammar goes here..
 //The abstract part 
-program : sentences ; 
-sentences : sentence sentences  ; 
+program : sentences | %empty	; 
+sentences : sentence sentences  | sentence	; 
 sentence : variabledeclaration | functionprototype | functiondefinition ; 
 
-//about variable declaratoin 
+//about variable declaration : THIS IS OK (no conflict)
 variabledeclaration : TYPE listidentifiers SEMI ; 
-listidentifiers : declaration COMMA listidentifiers | listidentifiers ; 
+listidentifiers : declaration COMMA listidentifiers | declaration ; 
 declaration : IDENT | IDENT LPAR INTCONST RPAR ; 
 
-//about function prototypes 
+//about function prototypes : THIS IS OK ( no conflict ) 
 functionprototype : functiondeclaration SEMI ; 
-functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR ; 
-formallistparameters : formalparameter COMMA formallistparameters | formallistparameters ; 
+functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR 	
+formallistparameters : formalparameter COMMA formallistparameters | formalparameter ; 
 formalparameter : TYPE IDENT | TYPE IDENT LBRACKET RBRACKET ; 
 
 //about function definitions.
-functiondefinition : functiondeclaration LBRACE declarationsorstatements RBRACE ; 
-declarationsorstatements : declorstat declarationsorstatements | declarationsorstatements ; 
-declorstat : declaration | statement ;  //TODO maybe add | statementblock
-statementblock : LBRACE liststatement RBRACE ; 
-liststatement : statement liststatement | liststatement ; 
+functiondefinition : functiondeclaration LBRACE declarationsorstatements RBRACE | functiondeclaration LBRACE RBRACE; 
+declarationsorstatements : declorstat declarationsorstatements | declorstat ; 
+declorstat : declaration | statement  ;  //TODO maybe add | statementblock
+statementblock : LBRACE liststatement RBRACE | LBRACE RBRACE; 
+liststatement : statement liststatement | statement ; 
 
 //about statements...
-statement : SEMI | expression SEMI | BREAK SEMI | CONTINUE SEMI | RETURN SEMI 
+statement :  SEMI | BREAK SEMI | CONTINUE SEMI | RETURN SEMI 
 			| RETURN expression SEMI | ifstatement | forstatement | whilestatement | dowhilestatement ; 
 //more specifics on statements 
-ifstatement : IF LPAR expression RPAR statementorblock ; 
+
+ifstatement : IF LPAR expression RPAR statementorblock | IF LPAR expression RPAR statementorblock ELSE statementorblock ;
 statementorblock : statement | statementblock ; 
 
-forstatement : FOR LPAR //TODO make it.. :'(
+forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR
+optionalexpression : expression | %empty;
 whilepart : WHILE LPAR expression RPAR ; 
-whilestatement : whilepart statementorblock ; 
+whilestatement : whilepart statementorblock SEMI ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
 //about expressions. 
-expression : INTCONST | REALCONST | IDENT | IDENT AMP | identexpression | lvalueexpr ; 
-expressionlist : expression COMMA expressionlist | expressionlist ; 
+expression : parenthesisexpression| unaryexpr| litteral | identexpression | lvalueexpr ; 
+expressionlist : expression COMMA expressionlist | expression ; 
+litteral : STRCONST | INTCONST | REALCONST | CHARCONST;
 
-identexpression : IDENT | IDENT AMP | IDENT LPAR expressionlist RPAR
+identexpression : IDENT | AMP IDENT | IDENT LPAR expressionlist RPAR ;
 lvalueexpr : lvalue ASSIGN expression | INCR lvalue | lvalue INCR | DECR lvalue | lvalue DECR ; 
 unaryexpr : unaryop expression | expression binaryop expression | expression QUEST expression COLON expression ; 
 parenthesisexpression : LPAR TYPE RPAR expression | LPAR expression RPAR ; 
-lvalue : IDENT | IDENT LPAR expression RPAR ; 
+
+//others for statement
+lvalue : IDENT | IDENT LBRACKET expression RBRACKET ; 
 unaryop : MINUS | BANG | TILDE ; 
 binaryop : EQUALS | NEQUAL | GT | GE | LT | LE | PLUS | MINUS | STAR |
 			SLASH | MOD | AMP | PIPE | DPIPE | DAMP ; 
-
 
 %%
 
@@ -122,6 +148,7 @@ binaryop : EQUALS | NEQUAL | GT | GE | LT | LE | PLUS | MINUS | STAR |
 
 int main(int argc, char** argv)
 {
+printf("Starting \n");
 initArray(&def_array);
 
   if(argc > 1){
@@ -142,10 +169,16 @@ initArray(&def_array);
 	}
 	//file was opened
 	if(debug){printf("Opening file : %s\n", argv[1]);}
-	yylex();
+	yyparse();
 	fclose(yyin);
   }else{
-	yylex();	
+	yyparse();	
 	return 0;
   }
+}
+
+
+
+void yyerror (char const *s){
+	fprintf(stderr, "Error while parsing : %s\n",s);
 }

@@ -6,6 +6,8 @@
 
 
 %{
+#define YY_DECL extern int yylex()
+
 /*This is the header, global defs, etc..*/
 #include <unistd.h>
 #include <math.h>
@@ -13,6 +15,7 @@
 #include <stdlib.h>
 #include "tokens.h"
 #include "defines.h"
+#include "parser.tab.h"
 
 
 int debug = 0;
@@ -359,15 +362,15 @@ ENDIF #endif
 <COMMENTSINGLE>"\n"	{if(debug){printf("End of comment ! \n");}yylineno++;BEGIN(INITIAL);}
 <COMMENTSINGLE>[^\n]	{/* discard */}
 
-{TYPE} 	{prettyprint(currName,yylineno,0,yytext);}
-{FOR}	{prettyprint(currName,yylineno,1,yytext);}
-{WHILE}	{prettyprint(currName,yylineno,2,yytext);}
-{DO}	{prettyprint(currName,yylineno,3,yytext);}
-{IF}	{prettyprint(currName,yylineno,4,yytext);}
-{ELSE}	{prettyprint(currName,yylineno,5,yytext);}
-{BREAK}	{prettyprint(currName,yylineno,6,yytext);}
-{CONTINUE}	{prettyprint(currName,yylineno,7,yytext);}
-{RETURN}	{prettyprint(currName,yylineno,8,yytext);}
+{TYPE} 	{if(debug){prettyprint(currName,yylineno,0,yytext);}return TYPE;}
+{FOR}	{if(debug){prettyprint(currName,yylineno,1,yytext);};return FOR;}
+{WHILE}	{if(debug){prettyprint(currName,yylineno,2,yytext);};return WHILE;}
+{DO}	{if(debug){prettyprint(currName,yylineno,3,yytext);};return DO;}
+{IF}	{if(debug){prettyprint(currName,yylineno,4,yytext);};return IF;}
+{ELSE}	{if(debug){prettyprint(currName,yylineno,5,yytext);};return ELSE;}
+{BREAK}	{if(debug){prettyprint(currName,yylineno,6,yytext);};return BREAK;}
+{CONTINUE}	{if(debug){prettyprint(currName,yylineno,7,yytext);};return CONTINUE;}
+{RETURN}	{if(debug){prettyprint(currName,yylineno,8,yytext);};return RETURN;}
 
 {IDENT}		{	int ident = findIdentifier(&def_array,yytext);
 				if(ident >= 0){
@@ -395,49 +398,50 @@ ENDIF #endif
 				
 				
 				}else{
-				prettyprint(currName,yylineno,9,yytext);
+				if(debug){prettyprint(currName,yylineno,9,yytext);}
+				return IDENT;
 				}
 			}
 
-{INTCONST} 	{prettyprint(currName,yylineno,10,yytext);}
-{REALCONST} 	{prettyprint(currName,yylineno,11,yytext);} // the current text is yytext
-{STRCONST}    { processString(currName,yylineno,yytext); }				
+{INTCONST} 	{if(debug){prettyprint(currName,yylineno,10,yytext);};return INTCONST;}
+{REALCONST} 	{if(debug){prettyprint(currName,yylineno,11,yytext);};return REALCONST;} // the current text is yytext
+{STRCONST}    { if(debug){processString(currName,yylineno,yytext);};return STRCONST; }				
 			
 			
-{CHARCONST}	{processChar(currName,yylineno,yytext);}
+{CHARCONST}	{if(debug){processChar(currName,yylineno,yytext);}return CHARCONST;}
 
-{LPAR}		{prettyprint(currName,yylineno,14,yytext);}
-{RPAR}		{prettyprint(currName,yylineno,15,yytext);}
-{LBRACKET}	{prettyprint(currName,yylineno,16,yytext);}
-{RBRACKET}	{prettyprint(currName,yylineno,17,yytext);}
-{LBRACE}	{prettyprint(currName,yylineno,18,yytext);}
-{RBRACE}	{prettyprint(currName,yylineno,19,yytext);}
+{LPAR}		{if(debug){prettyprint(currName,yylineno,14,yytext);};return LPAR;}
+{RPAR}		{if(debug){prettyprint(currName,yylineno,15,yytext);};return RPAR;}
+{LBRACKET}	{if(debug){prettyprint(currName,yylineno,16,yytext);};return LBRACKET;}
+{RBRACKET}	{if(debug){prettyprint(currName,yylineno,17,yytext);};return RBRACKET;}
+{LBRACE}	{if(debug){prettyprint(currName,yylineno,18,yytext);};return LBRACE;}
+{RBRACE}	{if(debug){prettyprint(currName,yylineno,19,yytext);};return RBRACE;}
 
-{COMMA}	{prettyprint(currName,yylineno,20,yytext);}
-{SEMI}	{prettyprint(currName,yylineno,21,yytext);}
-{QUEST}	{prettyprint(currName,yylineno,22,yytext);}
-{COLON}	{prettyprint(currName,yylineno,23,yytext);}
+{COMMA}	{if(debug){prettyprint(currName,yylineno,20,yytext);};return COMMA;}
+{SEMI}	{if(debug){prettyprint(currName,yylineno,21,yytext);};return SEMI;}
+{QUEST}	{if(debug){prettyprint(currName,yylineno,22,yytext);};return QUEST;}
+{COLON}	{if(debug){prettyprint(currName,yylineno,23,yytext);};return COLON;}
 
-{EQUALS}	{prettyprint(currName,yylineno,24,yytext);}
-{NEQUAL}	{prettyprint(currName,yylineno,25,yytext);}
-{GT}	{prettyprint(currName,yylineno,26,yytext);}
-{GE}	{prettyprint(currName,yylineno,27,yytext);}
-{LT}	{prettyprint(currName,yylineno,28,yytext);}
-{LE}	{prettyprint(currName,yylineno,29,yytext);}
-{ASSIGN}	{prettyprint(currName,yylineno,30,yytext);}
-{INCR}	{prettyprint(currName,yylineno,31,yytext);}
-{DECR}	{prettyprint(currName,yylineno,32,yytext);}
-{PLUS}	{prettyprint(currName,yylineno,33,yytext);}
-{MINUS}	{prettyprint(currName,yylineno,34,yytext);}
-{STAR}	{prettyprint(currName,yylineno,35,yytext);}
-{SLASH}	{prettyprint(currName,yylineno,36,yytext);}
-{MOD}	{prettyprint(currName,yylineno,37,yytext);}
-{TILDE}	{prettyprint(currName,yylineno,38,yytext);}
-{PIPE}	{prettyprint(currName,yylineno,39,yytext);}
-{AMP}	{prettyprint(currName,yylineno,40,yytext);}
-{BANG}	{prettyprint(currName,yylineno,41,yytext);}
-{DPIPE}	{prettyprint(currName,yylineno,42,yytext);}
-{DAMP}	{prettyprint(currName,yylineno,43,yytext);}
+{EQUALS}	{if(debug){prettyprint(currName,yylineno,24,yytext);};return EQUALS;}
+{NEQUAL}	{if(debug){prettyprint(currName,yylineno,25,yytext);};return NEQUAL;}
+{GT}	{if(debug){prettyprint(currName,yylineno,26,yytext);};return GT;}
+{GE}	{if(debug){prettyprint(currName,yylineno,27,yytext);};return GE;}
+{LT}	{if(debug){prettyprint(currName,yylineno,28,yytext);};return LT;}
+{LE}	{if(debug){prettyprint(currName,yylineno,29,yytext);};return LE;}
+{ASSIGN}	{if(debug){prettyprint(currName,yylineno,30,yytext);};return ASSIGN;}
+{INCR}	{if(debug){prettyprint(currName,yylineno,31,yytext);};return INCR;}
+{DECR}	{if(debug){prettyprint(currName,yylineno,32,yytext);};return DECR;}
+{PLUS}	{if(debug){prettyprint(currName,yylineno,33,yytext);};return PLUS;}
+{MINUS}	{if(debug){prettyprint(currName,yylineno,34,yytext);};return MINUS;}
+{STAR}	{if(debug){prettyprint(currName,yylineno,35,yytext);};return STAR;}
+{SLASH}	{if(debug){prettyprint(currName,yylineno,36,yytext);};return SLASH;}
+{MOD}	{if(debug){prettyprint(currName,yylineno,37,yytext);};return MOD;}
+{TILDE}	{if(debug){prettyprint(currName,yylineno,38,yytext);};return TILDE;}
+{PIPE}	{if(debug){prettyprint(currName,yylineno,39,yytext);};return PIPE;}
+{AMP}	{if(debug){prettyprint(currName,yylineno,40,yytext);};return AMP;}
+{BANG}	{if(debug){prettyprint(currName,yylineno,41,yytext);};return BANG;}
+{DPIPE}	{if(debug){prettyprint(currName,yylineno,42,yytext);};return DPIPE;}
+{DAMP}	{if(debug){prettyprint(currName,yylineno,43,yytext);}return DAMP;}
 
 [ \t]+ /* discard white*/
 \n 	{yylineno++;}
@@ -551,5 +555,9 @@ void setupInclude(){
 		yy_switch_to_buffer(yy_create_buffer(yyin,YY_BUF_SIZE));
 
 }
+
+
+
+
 
 
