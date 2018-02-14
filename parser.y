@@ -111,8 +111,11 @@ statementblock : LBRACE liststatement RBRACE | LBRACE RBRACE;
 liststatement : statement liststatement | statement ; 
 
 //about statements...
-statement :  SEMI | BREAK SEMI | CONTINUE SEMI | RETURN SEMI 
-			| RETURN expression SEMI | ifstatement | forstatement | whilestatement | dowhilestatement ; 
+
+statement : SEMI | BREAK SEMI | CONTINUE SEMI | RETURN SEMI 
+			| optionreturn expression SEMI | ifstatement | forstatement | whilestatement | dowhilestatement ; 
+optionreturn : RETURN | %empty
+
 //more specifics on statements 
 
 ifstatement : IF LPAR expression RPAR statementorblock | IF LPAR expression RPAR statementorblock ELSE statementorblock ;
@@ -124,8 +127,10 @@ whilepart : WHILE LPAR expression RPAR ;
 whilestatement : whilepart statementorblock SEMI ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
-//about expressions. 
-expression : parenthesisexpression| unaryexpr| litteral | identexpression | lvalueexpr ; 
+
+
+//about expressions. ALL CONFLICTS COME FROM BELOW !!
+expression : parenthesisexpression | unaryexpr | litteral | identexpression | lvalueexpr ; 
 expressionlist : expression COMMA expressionlist | expression ; 
 litteral : STRCONST | INTCONST | REALCONST | CHARCONST;
 
