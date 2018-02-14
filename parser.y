@@ -122,28 +122,52 @@ ifstatement : IF LPAR expression RPAR statementorblock | IF LPAR expression RPAR
 statementorblock : statement | statementblock ; 
 
 forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR
-optionalexpression : expression | %empty;
+optionalexpression : expression ;
 whilepart : WHILE LPAR expression RPAR ; 
 whilestatement : whilepart statementorblock SEMI ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
+lvalue : IDENT optionbrack;
+optionbrack : LBRACKET expression RBRACKET | %empty;	
+//RENAME FOR MORE CLARITY....
+expression : expression1 ;
+expression1 : expression2 COMMA expression1 | expression2;
+expression2 : expression2 ASSIGN expression3 | expression3;
+expression3 : expression3 QUEST expression3 COLON expression3  | expression4;
+expression4 : expression4 DPIPE expression5 | expression5;
+expression5 : expression5 DAMP expression6 | expression6;
+expression6 : expression6 PIPE expression7 | expression7;
+expression7 : expression7 AMP expression8 | expression8;
+expression8 : expression8 eqneqop expression9 | expression9;
+eqneqop : EQUALS | NEQUAL;
+expression9 : expression9 compop expression10 | expression10;
+compop : GT | GE | LT | LE;
+expression10 :  expression10 plusminus expression11 | expression11;
+plusminus : PLUS | MINUS;
+expression11 : expression11 starslashmodop expression12 | expression12;
+starslashmodop : STAR | SLASH | MOD;
+expression12 : unaryop expression12 | incrdecr lvalue | lvalue incrdecr 
+				|expression13;
+incrdecr : INCR | DECR;
+unaryop : BANG | TILDE | MINUS | AMP 
+expression13 : LPAR TYPE RPAR expression13 | LPAR expression13 RPAR | %empty;
 
+//expressionlist : expression2 COMMA expressionlist ;
+//lvalueassign : lvalueassign ASSIGN expression | lvalue;
+//questcolon : expression3 QUEST expression3 COLON expression3;
+//dpipeexp : dpipeexp DPIPE expression4 ;
+//dampexp : dampexp DAMP expression5 ;
+//pipeexp : pipeexp PIPE expression6 ;
+//ampexp : ampexp AMP expression7;
+//eqexpr : eqexpr EQUALS expression9 | eqexpr NEQUAL expression9;
+//compexpre : compexpre LE expression10 | compexpre LT expression10 | compexpre GE expression10 
+		//	| compexpre GT expression10  ; 
+//plusminusexpr : plusminusexpr PLUS expression11 | plusminusexpr MINUS expression11 ; 
+//starslashexpre : starslashexpre STAR expression12 | starslashexpre SLASH expression12 
+		//		| starslashexpre MOD expression12 ; 
+//unaryexpr : BANG unaryexpr | TILDE unaryexpr | INCR lvalue | lvalue INCR | lvalue DECR | DECR lvalue 
+//			| AMP unaryexpr | MINUS unaryexpr  ; 
 
-//about expressions. ALL CONFLICTS COME FROM BELOW !!
-expression : parenthesisexpression | unaryexpr | litteral | identexpression | lvalueexpr ; 
-expressionlist : expression COMMA expressionlist | expression ; 
-litteral : STRCONST | INTCONST | REALCONST | CHARCONST;
-
-identexpression : IDENT | AMP IDENT | IDENT LPAR expressionlist RPAR ;
-lvalueexpr : lvalue ASSIGN expression | INCR lvalue | lvalue INCR | DECR lvalue | lvalue DECR ; 
-unaryexpr : unaryop expression | expression binaryop expression | expression QUEST expression COLON expression ; 
-parenthesisexpression : LPAR TYPE RPAR expression | LPAR expression RPAR ; 
-
-//others for statement
-lvalue : IDENT | IDENT LBRACKET expression RBRACKET ; 
-unaryop : MINUS | BANG | TILDE ; 
-binaryop : EQUALS | NEQUAL | GT | GE | LT | LE | PLUS | MINUS | STAR |
-			SLASH | MOD | AMP | PIPE | DPIPE | DAMP ; 
 
 %%
 
