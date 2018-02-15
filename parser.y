@@ -6,6 +6,7 @@
 	#include <stdlib.h>
 	#include "defines.h"
 	
+	
 	//need this stuff from flex to know about
 	extern int yylex();
 	extern int yyparse();
@@ -14,6 +15,8 @@
 	extern char* currName;
 	extern int debug;
 	void yyerror (char const *s);
+	extern int yylineno;
+	extern char* currName; 
 	
 	
 %}
@@ -25,7 +28,7 @@
 %token WHILE
 %token DO
 %token IF
-%token ELSE
+%left ELSE
 %token BREAK
 %token CONTINUE
 %token RETURN
@@ -34,10 +37,7 @@
 %token REALCONST
 %token STRCONST
 %token CHARCONST
-%token LPAR
-%token RPAR
-%token LBRACKET
-%token RBRACKET
+
 %token LBRACE
 %token RBRACE
 %token SEMI
@@ -46,37 +46,21 @@
 
 
 
-%token BANG
-%token TILDE
-%token MINUS
-%token INCR
-%token DECR
-
-%token STAR
-%token SLASH
-%token MOD
-
-%token PLUS
-
-%token GT
-%token GE
-%token LT
-%token LE
-
-%token EQUALS
-%token NEQUAL
-
-%token AMP
-%token DAMP
-%token PIPE
-%token DPIPE
-%token ASSIGN
-%token COMMA
 
 
 //we set the associativity left to right or right to left..
-%left LPAR RPAR STAR SLASH MOD PLUS MINUS GT GE LT LE EQUALS NEQUAL
-%left  AMP PIPE DAMP DPIPE COMMA
+%left LPAR RPAR LBRACKET RBRACKET 
+%right BANG TILDE DECR INCR AMP 
+%left STAR SLASH MOD 
+%left PLUS MINUS 
+%left GT GE LT LE
+%left EQUALS NEQUAL
+%left PIPE
+%left DAMP
+%left DPIPE
+%right ASSIGN
+%left COMMA
+
 /*
 Operator precedence is determined by the 
 line ordering of the declarations; the higher the line number 
@@ -88,14 +72,14 @@ From : https://www.gnu.org/software/bison/manual/html_node/Infix-Calc.html#Infix
 %% 
 //Grammar goes here..
 //The abstract part 
-program : sentences | %empty	; 
+program : sentences ;	; 
 sentences : sentence sentences  | sentence	; 
 sentence : variabledeclaration | functionprototype | functiondefinition ; 
 
 //about variable declaration : THIS IS OK (no conflict)
 variabledeclaration : TYPE listidentifiers SEMI ; 
 listidentifiers : declaration COMMA listidentifiers | declaration ; 
-declaration : IDENT | IDENT LPAR INTCONST RPAR ; 
+declaration : IDENT LPAR INTCONST RPAR | IDENT ; 
 
 //about function prototypes : THIS IS OK ( no conflict ) 
 functionprototype : functiondeclaration SEMI ; 
@@ -112,17 +96,17 @@ liststatement : statement liststatement | statement ;
 
 //about statements...
 
-statement : SEMI | BREAK SEMI | CONTINUE SEMI | RETURN SEMI 
-			| optionreturn expression SEMI | ifstatement | forstatement | whilestatement | dowhilestatement ; 
-optionreturn : RETURN | %empty
-
+statement : keywords SEMI | RETURN expression SEMI | expression SEMI | ifstatement | forstatement | whilestatement | dowhilestatement ; 
+//optionreturn : RETURN | %empty;
+keywords : BREAK | CONTINUE; 
 //more specifics on statements 
 
-ifstatement : IF LPAR expression RPAR statementorblock | IF LPAR expression RPAR statementorblock ELSE statementorblock ;
+ifstatement : IF LPAR expression RPAR statementorblock optionelse;
+optionelse : ELSE statementblock | %empty;
 statementorblock : statement | statementblock ; 
 
 forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR
-optionalexpression : expression ;
+optionalexpression : expression  | %empty ;
 whilepart : WHILE LPAR expression RPAR ; 
 whilestatement : whilepart statementorblock SEMI ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
@@ -130,10 +114,10 @@ dowhilestatement : DO statementorblock whilepart SEMI ;
 lvalue : IDENT optionbrack;
 optionbrack : LBRACKET expression RBRACKET | %empty;	
 //RENAME FOR MORE CLARITY....
-expression : expression1 ;
+expression : expression1  ;
 expression1 : expression2 COMMA expression1 | expression2;
 expression2 : expression2 ASSIGN expression3 | expression3;
-expression3 : expression3 QUEST expression3 COLON expression3  | expression4;
+expression3 : expression3 QUEST expression4 COLON expression4  | expression4;
 expression4 : expression4 DPIPE expression5 | expression5;
 expression5 : expression5 DAMP expression6 | expression6;
 expression6 : expression6 PIPE expression7 | expression7;
@@ -149,24 +133,10 @@ starslashmodop : STAR | SLASH | MOD;
 expression12 : unaryop expression12 | incrdecr lvalue | lvalue incrdecr 
 				|expression13;
 incrdecr : INCR | DECR;
-unaryop : BANG | TILDE | MINUS | AMP 
-expression13 : LPAR TYPE RPAR expression13 | LPAR expression13 RPAR | %empty;
+unaryop : BANG | TILDE | MINUS | AMP ;
+expression13 : LPAR TYPE RPAR expression13 | LPAR expression13 RPAR | constant;
+constant : CHARCONST | INTCONST | REALCONST | STRCONST;
 
-//expressionlist : expression2 COMMA expressionlist ;
-//lvalueassign : lvalueassign ASSIGN expression | lvalue;
-//questcolon : expression3 QUEST expression3 COLON expression3;
-//dpipeexp : dpipeexp DPIPE expression4 ;
-//dampexp : dampexp DAMP expression5 ;
-//pipeexp : pipeexp PIPE expression6 ;
-//ampexp : ampexp AMP expression7;
-//eqexpr : eqexpr EQUALS expression9 | eqexpr NEQUAL expression9;
-//compexpre : compexpre LE expression10 | compexpre LT expression10 | compexpre GE expression10 
-		//	| compexpre GT expression10  ; 
-//plusminusexpr : plusminusexpr PLUS expression11 | plusminusexpr MINUS expression11 ; 
-//starslashexpre : starslashexpre STAR expression12 | starslashexpre SLASH expression12 
-		//		| starslashexpre MOD expression12 ; 
-//unaryexpr : BANG unaryexpr | TILDE unaryexpr | INCR lvalue | lvalue INCR | lvalue DECR | DECR lvalue 
-//			| AMP unaryexpr | MINUS unaryexpr  ; 
 
 
 %%
@@ -209,5 +179,5 @@ initArray(&def_array);
 
 
 void yyerror (char const *s){
-	fprintf(stderr, "Error while parsing : %s\n",s);
+	fprintf(stderr, "Error line %d in file %s while parsing : %s\n",yylineno, currName,  s);
 }
