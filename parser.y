@@ -17,6 +17,7 @@
 	void yyerror (char const *s);
 	extern int yylineno;
 	extern char* currName; 
+	extern char* yytext;
 	
 	
 %}
@@ -28,6 +29,7 @@
 %token WHILE
 %token DO
 %token IF
+%left NOTELSE 
 %left ELSE
 %token BREAK
 %token CONTINUE
@@ -47,7 +49,6 @@
 
 
 
-
 //we set the associativity left to right or right to left..
 %left LPAR RPAR LBRACKET RBRACKET 
 %right BANG TILDE DECR INCR AMP 
@@ -60,6 +61,7 @@
 %left DPIPE
 %right ASSIGN
 %left COMMA
+%nonassoc UMINUS
 
 /*
 Operator precedence is determined by the 
@@ -72,51 +74,51 @@ From : https://www.gnu.org/software/bison/manual/html_node/Infix-Calc.html#Infix
 %% 
 //Grammar goes here..
 //The abstract part 
-program : sentences ;	; 
-sentences : sentence sentences  | sentence	; 
+program : sentences ; 
+sentences : sentence sentences | sentence	; 
 sentence : variabledeclaration | functionprototype | functiondefinition ; 
 
 //about variable declaration : THIS IS OK (no conflict)
 variabledeclaration : TYPE listidentifiers SEMI ; 
 listidentifiers : declaration COMMA listidentifiers | declaration ; 
-declaration : IDENT LPAR INTCONST RPAR | IDENT ; 
+declaration : IDENT LBRACKET INTCONST RBRACKET | IDENT; 
 
 //about function prototypes : THIS IS OK ( no conflict ) 
 functionprototype : functiondeclaration SEMI ; 
-functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR 	
+functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR | TYPE IDENT LPAR RPAR;	
 formallistparameters : formalparameter COMMA formallistparameters | formalparameter ; 
 formalparameter : TYPE IDENT | TYPE IDENT LBRACKET RBRACKET ; 
 
 //about function definitions.
 functiondefinition : functiondeclaration LBRACE declarationsorstatements RBRACE | functiondeclaration LBRACE RBRACE; 
 declarationsorstatements : declorstat declarationsorstatements | declorstat ; 
-declorstat : declaration | statement  ;  //TODO maybe add | statementblock
+declorstat : variabledeclaration | statement  | statementblock
 statementblock : LBRACE liststatement RBRACE | LBRACE RBRACE; 
 liststatement : statement liststatement | statement ; 
 
 //about statements...
 
 statement : keywords SEMI | RETURN expression SEMI | expression SEMI | ifstatement | forstatement | whilestatement | dowhilestatement ; 
-//optionreturn : RETURN | %empty;
 keywords : BREAK | CONTINUE; 
 //more specifics on statements 
 
-ifstatement : IF LPAR expression RPAR statementorblock optionelse;
-optionelse : ELSE statementblock | %empty;
+ifstatement : IF LPAR expression RPAR statementorblock ELSE statementblock | IF LPAR expression RPAR statementorblock %prec NOTELSE;
 statementorblock : statement | statementblock ; 
 
-forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR
+forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR statementorblock
 optionalexpression : expression  | %empty ;
 whilepart : WHILE LPAR expression RPAR ; 
 whilestatement : whilepart statementorblock SEMI ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
-lvalue : IDENT optionbrack;
+lvalue : IDENT optionbrack  ;
 optionbrack : LBRACKET expression RBRACKET | %empty;	
 //RENAME FOR MORE CLARITY....
-expression : expression1  ;
-expression1 : expression2 COMMA expression1 | expression2;
-expression2 : expression2 ASSIGN expression3 | expression3;
+expression : expression2  | more ;
+more : IDENT LBRACKET expression RBRACKET | IDENT LPAR expressionlist RPAR ;
+expressionlist : expression3 COMMA expressionlist | expression3 ; 
+
+expression2 : lvalue ASSIGN expression | expression3;
 expression3 : expression3 QUEST expression4 COLON expression4  | expression4;
 expression4 : expression4 DPIPE expression5 | expression5;
 expression5 : expression5 DAMP expression6 | expression6;
@@ -130,12 +132,12 @@ expression10 :  expression10 plusminus expression11 | expression11;
 plusminus : PLUS | MINUS;
 expression11 : expression11 starslashmodop expression12 | expression12;
 starslashmodop : STAR | SLASH | MOD;
-expression12 : unaryop expression12 | incrdecr lvalue | lvalue incrdecr 
+expression12 : unaryop expression12 | MINUS expression12 %prec UMINUS | AMP IDENT %prec UMINUS| incrdecr lvalue | lvalue incrdecr 
 				|expression13;
 incrdecr : INCR | DECR;
-unaryop : BANG | TILDE | MINUS | AMP ;
+unaryop : BANG | TILDE   ;
 expression13 : LPAR TYPE RPAR expression13 | LPAR expression13 RPAR | constant;
-constant : CHARCONST | INTCONST | REALCONST | STRCONST;
+constant : CHARCONST | INTCONST | REALCONST | STRCONST | IDENT ;
 
 
 
@@ -147,6 +149,7 @@ constant : CHARCONST | INTCONST | REALCONST | STRCONST;
 
 int main(int argc, char** argv)
 {
+
 printf("Starting \n");
 initArray(&def_array);
 
@@ -179,5 +182,5 @@ initArray(&def_array);
 
 
 void yyerror (char const *s){
-	fprintf(stderr, "Error line %d in file %s while parsing : %s\n",yylineno, currName,  s);
+	fprintf(stderr, "Error line %d in file %s while parsing on token :  %s.\n Error :  %s\n",yylineno, currName, yytext, s);
 }

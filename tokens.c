@@ -41,7 +41,7 @@
 	 "IDENT",//identifier
 	 "INTCONST","REALCONST","STRCONST","CHARCONST", //const
 	 "LPAR","RPAR","LBRACKET","RBRACKET","LBRACE","RBRACE",//()[]{}
-	 "COMMA","SEMI","QUEST","COLON"//punct,
+	 "COMMA","SEMI","QUEST","COLON",//punct,
 	 "EQUALS","NEQUAL","GT","GE","LT","LE","ASSIGN","INCR","DECR", //gt,ge..
 	 "PLUS","MINUS","STAR","SLASH","MOD","TILDE",//math
 	 "PIPE","AMP","BANG","DPIPE","DAMP"//logic
@@ -56,8 +56,11 @@
  * @param text the content of the token
  * */
 void prettyprint(char* file,int lineno, int tokenIdx, char* text){
+
 	printf("File %s Line %d Token %s \'%s\'\n",file,lineno,TOKENS_MESSAGES[tokenIdx],text);	
 }
+
+
 
 /**
  * @brief processes a C-string and pretty prints it. 
