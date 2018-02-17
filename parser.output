@@ -1,3 +1,10 @@
+State 107 conflicts: 16 shift/reduce
+State 127 conflicts: 1 shift/reduce
+State 129 conflicts: 16 shift/reduce
+State 140 conflicts: 1 shift/reduce
+State 147 conflicts: 1 shift/reduce
+
+
 Grammar
 
     0 $accept: program $end
@@ -79,89 +86,58 @@ Grammar
    50 optionbrack: LBRACKET expression RBRACKET
    51            | %empty
 
-   52 expression: expression2
-   53           | more
+   52 expression: constant
+   53           | IDENT
+   54           | AMP IDENT
+   55           | IDENT LBRACKET expression RBRACKET
+   56           | IDENT LPAR RPAR
+   57           | IDENT LPAR expressionlist RPAR
+   58           | lvalue incrdecr
+   59           | incrdecr lvalue
+   60           | lvalue ASSIGN expression
+   61           | unaryop expression
+   62           | expression binaryop expression
+   63           | expression QUEST expression COLON expression
+   64           | LPAR TYPE RPAR expression
+   65           | LPAR expression RPAR
 
-   54 more: IDENT LBRACKET expression RBRACKET
-   55     | IDENT LPAR expressionlist RPAR
+   66 expressionlist: expression COMMA expressionlist
+   67               | expression
 
-   56 expressionlist: expression3 COMMA expressionlist
-   57               | expression3
+   68 incrdecr: INCR
+   69         | DECR
 
-   58 expression2: lvalue ASSIGN expression
-   59            | expression3
+   70 unaryop: MINUS
+   71        | BANG
+   72        | TILDE
 
-   60 expression3: expression3 QUEST expression4 COLON expression4
-   61            | expression4
+   73 binaryop: EQUALS
+   74         | NEQUAL
+   75         | GE
+   76         | GT
+   77         | LE
+   78         | LT
+   79         | PLUS
+   80         | MINUS
+   81         | STAR
+   82         | SLASH
+   83         | MOD
+   84         | PIPE
+   85         | AMP
+   86         | DPIPE
+   87         | DAMP
 
-   62 expression4: expression4 DPIPE expression5
-   63            | expression5
-
-   64 expression5: expression5 DAMP expression6
-   65            | expression6
-
-   66 expression6: expression6 PIPE expression7
-   67            | expression7
-
-   68 expression7: expression7 AMP expression8
-   69            | expression8
-
-   70 expression8: expression8 eqneqop expression9
-   71            | expression9
-
-   72 eqneqop: EQUALS
-   73        | NEQUAL
-
-   74 expression9: expression9 compop expression10
-   75            | expression10
-
-   76 compop: GT
-   77       | GE
-   78       | LT
-   79       | LE
-
-   80 expression10: expression10 plusminus expression11
-   81             | expression11
-
-   82 plusminus: PLUS
-   83          | MINUS
-
-   84 expression11: expression11 starslashmodop expression12
-   85             | expression12
-
-   86 starslashmodop: STAR
-   87               | SLASH
-   88               | MOD
-
-   89 expression12: unaryop expression12
-   90             | MINUS expression12
-   91             | AMP IDENT
-   92             | incrdecr lvalue
-   93             | lvalue incrdecr
-   94             | expression13
-
-   95 incrdecr: INCR
-   96         | DECR
-
-   97 unaryop: BANG
-   98        | TILDE
-
-   99 expression13: LPAR TYPE RPAR expression13
-  100             | LPAR expression13 RPAR
-  101             | constant
-
-  102 constant: CHARCONST
-  103         | INTCONST
-  104         | REALCONST
-  105         | STRCONST
-  106         | IDENT
+   88 constant: INTCONST
+   89         | REALCONST
+   90         | STRCONST
+   91         | CHARCONST
 
 
 Terminals, with rules where they appear
 
 $end (0) 0
 error (256)
-TYPE (258) 7 13 14 17 18 99
+TYPE (258) 7 13 14 17 18 64
 FOR (259) 43
 WHILE (260) 46
 DO (261) 48
@@ -171,144 +147,116 @@ ELSE (264) 39
 BREAK (265) 37
 CONTINUE (266) 38
 RETURN (267) 31
-IDENT (268) 10 11 13 14 17 18 49 54 55 91 106
-INTCONST (269) 10 103
-REALCONST (270) 104
-STRCONST (271) 105
-CHARCONST (272) 102
+IDENT (268) 10 11 13 14 17 18 49 53 54 55 56 57
+INTCONST (269) 10 88
+REALCONST (270) 89
+STRCONST (271) 90
+CHARCONST (272) 91
 LBRACE (273) 19 20 26 27
 RBRACE (274) 19 20 26 27
 SEMI (275) 7 12 30 31 32 43 47 48
-QUEST (276) 60
-COLON (277) 60
-LPAR (278) 13 14 39 40 43 46 55 99 100
-RPAR (279) 13 14 39 40 43 46 55 99 100
-LBRACKET (280) 10 18 50 54
-RBRACKET (281) 10 18 50 54
-BANG (282) 97
-TILDE (283) 98
-DECR (284) 96
-INCR (285) 95
-AMP (286) 68 91
-STAR (287) 86
-SLASH (288) 87
-MOD (289) 88
-PLUS (290) 82
-MINUS (291) 83 90
-GT (292) 76
-GE (293) 77
-LT (294) 78
-LE (295) 79
-EQUALS (296) 72
-NEQUAL (297) 73
-PIPE (298) 66
-DAMP (299) 64
-DPIPE (300) 62
-ASSIGN (301) 58
-COMMA (302) 8 15 56
-UMINUS (303)
+QUEST (276) 63
+COLON (277) 63
+COMMA (278) 8 15 66
+ASSIGN (279) 60
+QUESTCOLON (280)
+DPIPE (281) 86
+DAMP (282) 87
+PIPE (283) 84
+AMP (284) 54 85
+EQUALS (285) 73
+NEQUAL (286) 74
+GT (287) 76
+GE (288) 75
+LT (289) 78
+LE (290) 77
+PLUS (291) 79
+MINUS (292) 70 80
+STAR (293) 81
+SLASH (294) 82
+MOD (295) 83
+BANG (296) 71
+TILDE (297) 72
+DECR (298) 69
+INCR (299) 68
+UMINUS (300)
+UAMP (301)
+LPAR (302) 13 14 39 40 43 46 56 57 64 65
+RPAR (303) 13 14 39 40 43 46 56 57 64 65
+LBRACKET (304) 10 18 50 55
+RBRACKET (305) 10 18 50 55
 
 
 Nonterminals, with rules where they appear
 
-$accept (49)
+$accept (51)
     on left: 0
-program (50)
+program (52)
     on left: 1, on right: 0
-sentences (51)
+sentences (53)
     on left: 2 3, on right: 1 2
-sentence (52)
+sentence (54)
     on left: 4 5 6, on right: 2 3
-variabledeclaration (53)
+variabledeclaration (55)
     on left: 7, on right: 4 23
-listidentifiers (54)
+listidentifiers (56)
     on left: 8 9, on right: 7 8
-declaration (55)
+declaration (57)
     on left: 10 11, on right: 8 9
-functionprototype (56)
+functionprototype (58)
     on left: 12, on right: 5
-functiondeclaration (57)
+functiondeclaration (59)
     on left: 13 14, on right: 12 19 20
-formallistparameters (58)
+formallistparameters (60)
     on left: 15 16, on right: 13 15
-formalparameter (59)
+formalparameter (61)
     on left: 17 18, on right: 15 16
-functiondefinition (60)
+functiondefinition (62)
     on left: 19 20, on right: 6
-declarationsorstatements (61)
+declarationsorstatements (63)
     on left: 21 22, on right: 19 21
-declorstat (62)
+declorstat (64)
     on left: 23 24 25, on right: 21 22
-statementblock (63)
+statementblock (65)
     on left: 26 27, on right: 25 39 42
-liststatement (64)
+liststatement (66)
     on left: 28 29, on right: 26 28
-statement (65)
+statement (67)
     on left: 30 31 32 33 34 35 36, on right: 24 28 29 41
-keywords (66)
+keywords (68)
     on left: 37 38, on right: 30
-ifstatement (67)
+ifstatement (69)
     on left: 39 40, on right: 33
-statementorblock (68)
+statementorblock (70)
     on left: 41 42, on right: 39 40 43 47 48
-forstatement (69)
+forstatement (71)
     on left: 43, on right: 34
-optionalexpression (70)
+optionalexpression (72)
     on left: 44 45, on right: 43
-whilepart (71)
+whilepart (73)
     on left: 46, on right: 47 48
-whilestatement (72)
+whilestatement (74)
     on left: 47, on right: 35
-dowhilestatement (73)
+dowhilestatement (75)
     on left: 48, on right: 36
-lvalue (74)
-    on left: 49, on right: 58 92 93
-optionbrack (75)
+lvalue (76)
+    on left: 49, on right: 58 59 60
+optionbrack (77)
     on left: 50 51, on right: 49
-expression (76)
-    on left: 52 53, on right: 31 32 39 40 44 46 50 54 58
-more (77)
-    on left: 54 55, on right: 53
-expressionlist (78)
-    on left: 56 57, on right: 55 56
-expression2 (79)
-    on left: 58 59, on right: 52
-expression3 (80)
-    on left: 60 61, on right: 56 57 59 60
-expression4 (81)
-    on left: 62 63, on right: 60 61 62
-expression5 (82)
-    on left: 64 65, on right: 62 63 64
-expression6 (83)
-    on left: 66 67, on right: 64 65 66
-expression7 (84)
-    on left: 68 69, on right: 66 67 68
-expression8 (85)
-    on left: 70 71, on right: 68 69 70
-eqneqop (86)
-    on left: 72 73, on right: 70
-expression9 (87)
-    on left: 74 75, on right: 70 71 74
-compop (88)
-    on left: 76 77 78 79, on right: 74
-expression10 (89)
-    on left: 80 81, on right: 74 75 80
-plusminus (90)
-    on left: 82 83, on right: 80
-expression11 (91)
-    on left: 84 85, on right: 80 81 84
-starslashmodop (92)
-    on left: 86 87 88, on right: 84
-expression12 (93)
-    on left: 89 90 91 92 93 94, on right: 84 85 89 90
-incrdecr (94)
-    on left: 95 96, on right: 92 93
-unaryop (95)
-    on left: 97 98, on right: 89
-expression13 (96)
-    on left: 99 100 101, on right: 94 99 100
-constant (97)
-    on left: 102 103 104 105 106, on right: 101
+expression (78)
+    on left: 52 53 54 55 56 57 58 59 60 61 62 63 64 65, on right: 31
+    32 39 40 44 46 50 55 60 61 62 63 64 65 66 67
+expressionlist (79)
+    on left: 66 67, on right: 57 66
+incrdecr (80)
+    on left: 68 69, on right: 58 59
+unaryop (81)
+    on left: 70 71 72, on right: 61
+binaryop (82)
+    on left: 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87, on right:
+    62
+constant (83)
+    on left: 88 89 90 91, on right: 52
 
 
 State 0
@@ -464,13 +412,13 @@ State 14
     CHARCONST  shift, and go to state 32
     LBRACE     shift, and go to state 33
     RBRACE     shift, and go to state 34
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
     variabledeclaration       go to state 42
     declarationsorstatements  go to state 43
@@ -485,22 +433,9 @@ State 14
     dowhilestatement          go to state 52
     lvalue                    go to state 53
     expression                go to state 54
-    more                      go to state 55
-    expression2               go to state 56
-    expression3               go to state 57
-    expression4               go to state 58
-    expression5               go to state 59
-    expression6               go to state 60
-    expression7               go to state 61
-    expression8               go to state 62
-    expression9               go to state 63
-    expression10              go to state 64
-    expression11              go to state 65
-    expression12              go to state 66
-    incrdecr                  go to state 67
-    unaryop                   go to state 68
-    expression13              go to state 69
-    constant                  go to state 70
+    incrdecr                  go to state 55
+    unaryop                   go to state 56
+    constant                  go to state 57
 
 
 State 15
@@ -515,18 +450,18 @@ State 16
    13 functiondeclaration: TYPE IDENT LPAR . formallistparameters RPAR
    14                    | TYPE IDENT LPAR . RPAR
 
-    TYPE  shift, and go to state 71
-    RPAR  shift, and go to state 72
+    TYPE  shift, and go to state 58
+    RPAR  shift, and go to state 59
 
-    formallistparameters  go to state 73
-    formalparameter       go to state 74
+    formallistparameters  go to state 60
+    formalparameter       go to state 61
 
 
 State 17
 
    10 declaration: IDENT LBRACKET . INTCONST RBRACKET
 
-    INTCONST  shift, and go to state 75
+    INTCONST  shift, and go to state 62
 
 
 State 18
@@ -540,9 +475,9 @@ State 19
 
     8 listidentifiers: declaration COMMA . listidentifiers
 
-    IDENT  shift, and go to state 76
+    IDENT  shift, and go to state 63
 
-    listidentifiers  go to state 77
+    listidentifiers  go to state 64
     declaration      go to state 11
 
 
@@ -550,7 +485,7 @@ State 20
 
     7 variabledeclaration: TYPE . listidentifiers SEMI
 
-    IDENT  shift, and go to state 76
+    IDENT  shift, and go to state 63
 
     listidentifiers  go to state 10
     declaration      go to state 11
@@ -560,14 +495,14 @@ State 21
 
    43 forstatement: FOR . LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR statementorblock
 
-    LPAR  shift, and go to state 78
+    LPAR  shift, and go to state 65
 
 
 State 22
 
    46 whilepart: WHILE . LPAR expression RPAR
 
-    LPAR  shift, and go to state 79
+    LPAR  shift, and go to state 66
 
 
 State 23
@@ -587,41 +522,28 @@ State 23
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
     LBRACE     shift, and go to state 33
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    statementblock    go to state 80
-    statement         go to state 81
+    statementblock    go to state 67
+    statement         go to state 68
     keywords          go to state 47
     ifstatement       go to state 48
-    statementorblock  go to state 82
+    statementorblock  go to state 69
     forstatement      go to state 49
     whilepart         go to state 50
     whilestatement    go to state 51
     dowhilestatement  go to state 52
     lvalue            go to state 53
     expression        go to state 54
-    more              go to state 55
-    expression2       go to state 56
-    expression3       go to state 57
-    expression4       go to state 58
-    expression5       go to state 59
-    expression6       go to state 60
-    expression7       go to state 61
-    expression8       go to state 62
-    expression9       go to state 63
-    expression10      go to state 64
-    expression11      go to state 65
-    expression12      go to state 66
-    incrdecr          go to state 67
-    unaryop           go to state 68
-    expression13      go to state 69
-    constant          go to state 70
+    incrdecr          go to state 55
+    unaryop           go to state 56
+    constant          go to state 57
 
 
 State 24
@@ -629,7 +551,7 @@ State 24
    39 ifstatement: IF . LPAR expression RPAR statementorblock ELSE statementblock
    40            | IF . LPAR expression RPAR statementorblock
 
-    LPAR  shift, and go to state 83
+    LPAR  shift, and go to state 70
 
 
 State 25
@@ -655,78 +577,66 @@ State 27
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue        go to state 53
-    expression    go to state 84
-    more          go to state 55
-    expression2   go to state 56
-    expression3   go to state 57
-    expression4   go to state 58
-    expression5   go to state 59
-    expression6   go to state 60
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    lvalue      go to state 53
+    expression  go to state 71
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
 
 
 State 28
 
    49 lvalue: IDENT . optionbrack
-   54 more: IDENT . LBRACKET expression RBRACKET
-   55     | IDENT . LPAR expressionlist RPAR
-  106 constant: IDENT .
+   53 expression: IDENT .
+   55           | IDENT . LBRACKET expression RBRACKET
+   56           | IDENT . LPAR RPAR
+   57           | IDENT . LPAR expressionlist RPAR
 
-    LPAR      shift, and go to state 85
-    LBRACKET  shift, and go to state 86
+    LPAR      shift, and go to state 72
+    LBRACKET  shift, and go to state 73
 
+    ASSIGN    reduce using rule 51 (optionbrack)
     DECR      reduce using rule 51 (optionbrack)
     INCR      reduce using rule 51 (optionbrack)
-    ASSIGN    reduce using rule 51 (optionbrack)
-    $default  reduce using rule 106 (constant)
+    $default  reduce using rule 53 (expression)
 
-    optionbrack  go to state 87
+    optionbrack  go to state 74
 
 
 State 29
 
-  103 constant: INTCONST .
+   88 constant: INTCONST .
 
-    $default  reduce using rule 103 (constant)
+    $default  reduce using rule 88 (constant)
 
 
 State 30
 
-  104 constant: REALCONST .
+   89 constant: REALCONST .
 
-    $default  reduce using rule 104 (constant)
+    $default  reduce using rule 89 (constant)
 
 
 State 31
 
-  105 constant: STRCONST .
+   90 constant: STRCONST .
 
-    $default  reduce using rule 105 (constant)
+    $default  reduce using rule 90 (constant)
 
 
 State 32
 
-  102 constant: CHARCONST .
+   91 constant: CHARCONST .
 
-    $default  reduce using rule 102 (constant)
+    $default  reduce using rule 91 (constant)
 
 
 State 33
@@ -746,17 +656,17 @@ State 33
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    RBRACE     shift, and go to state 88
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    RBRACE     shift, and go to state 75
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    liststatement     go to state 89
-    statement         go to state 90
+    liststatement     go to state 76
+    statement         go to state 77
     keywords          go to state 47
     ifstatement       go to state 48
     forstatement      go to state 49
@@ -765,22 +675,9 @@ State 33
     dowhilestatement  go to state 52
     lvalue            go to state 53
     expression        go to state 54
-    more              go to state 55
-    expression2       go to state 56
-    expression3       go to state 57
-    expression4       go to state 58
-    expression5       go to state 59
-    expression6       go to state 60
-    expression7       go to state 61
-    expression8       go to state 62
-    expression9       go to state 63
-    expression10      go to state 64
-    expression11      go to state 65
-    expression12      go to state 66
-    incrdecr          go to state 67
-    unaryop           go to state 68
-    expression13      go to state 69
-    constant          go to state 70
+    incrdecr          go to state 55
+    unaryop           go to state 56
+    constant          go to state 57
 
 
 State 34
@@ -792,79 +689,70 @@ State 34
 
 State 35
 
-   99 expression13: LPAR . TYPE RPAR expression13
-  100             | LPAR . expression13 RPAR
+   54 expression: AMP . IDENT
 
-    TYPE       shift, and go to state 91
-    IDENT      shift, and go to state 92
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-
-    expression13  go to state 93
-    constant      go to state 70
+    IDENT  shift, and go to state 78
 
 
 State 36
 
-   97 unaryop: BANG .
+   70 unaryop: MINUS .
 
-    $default  reduce using rule 97 (unaryop)
+    $default  reduce using rule 70 (unaryop)
 
 
 State 37
 
-   98 unaryop: TILDE .
+   71 unaryop: BANG .
 
-    $default  reduce using rule 98 (unaryop)
+    $default  reduce using rule 71 (unaryop)
 
 
 State 38
 
-   96 incrdecr: DECR .
+   72 unaryop: TILDE .
 
-    $default  reduce using rule 96 (incrdecr)
+    $default  reduce using rule 72 (unaryop)
 
 
 State 39
 
-   95 incrdecr: INCR .
+   69 incrdecr: DECR .
 
-    $default  reduce using rule 95 (incrdecr)
+    $default  reduce using rule 69 (incrdecr)
 
 
 State 40
 
-   91 expression12: AMP . IDENT
+   68 incrdecr: INCR .
 
-    IDENT  shift, and go to state 94
+    $default  reduce using rule 68 (incrdecr)
 
 
 State 41
 
-   90 expression12: MINUS . expression12
+   64 expression: LPAR . TYPE RPAR expression
+   65           | LPAR . expression RPAR
 
-    IDENT      shift, and go to state 95
+    TYPE       shift, and go to state 79
+    IDENT      shift, and go to state 28
     INTCONST   shift, and go to state 29
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue        go to state 96
-    expression12  go to state 97
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    lvalue      go to state 53
+    expression  go to state 80
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
 
 
 State 42
@@ -878,7 +766,7 @@ State 43
 
    19 functiondefinition: functiondeclaration LBRACE declarationsorstatements . RBRACE
 
-    RBRACE  shift, and go to state 98
+    RBRACE  shift, and go to state 81
 
 
 State 44
@@ -900,18 +788,18 @@ State 44
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
     LBRACE     shift, and go to state 33
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
     $default  reduce using rule 22 (declarationsorstatements)
 
     variabledeclaration       go to state 42
-    declarationsorstatements  go to state 99
+    declarationsorstatements  go to state 82
     declorstat                go to state 44
     statementblock            go to state 45
     statement                 go to state 46
@@ -923,22 +811,9 @@ State 44
     dowhilestatement          go to state 52
     lvalue                    go to state 53
     expression                go to state 54
-    more                      go to state 55
-    expression2               go to state 56
-    expression3               go to state 57
-    expression4               go to state 58
-    expression5               go to state 59
-    expression6               go to state 60
-    expression7               go to state 61
-    expression8               go to state 62
-    expression9               go to state 63
-    expression10              go to state 64
-    expression11              go to state 65
-    expression12              go to state 66
-    incrdecr                  go to state 67
-    unaryop                   go to state 68
-    expression13              go to state 69
-    constant                  go to state 70
+    incrdecr                  go to state 55
+    unaryop                   go to state 56
+    constant                  go to state 57
 
 
 State 45
@@ -959,7 +834,7 @@ State 47
 
    30 statement: keywords . SEMI
 
-    SEMI  shift, and go to state 100
+    SEMI  shift, and go to state 83
 
 
 State 48
@@ -993,41 +868,28 @@ State 50
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
     LBRACE     shift, and go to state 33
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    statementblock    go to state 80
-    statement         go to state 81
+    statementblock    go to state 67
+    statement         go to state 68
     keywords          go to state 47
     ifstatement       go to state 48
-    statementorblock  go to state 101
+    statementorblock  go to state 84
     forstatement      go to state 49
     whilepart         go to state 50
     whilestatement    go to state 51
     dowhilestatement  go to state 52
     lvalue            go to state 53
     expression        go to state 54
-    more              go to state 55
-    expression2       go to state 56
-    expression3       go to state 57
-    expression4       go to state 58
-    expression5       go to state 59
-    expression6       go to state 60
-    expression7       go to state 61
-    expression8       go to state 62
-    expression9       go to state 63
-    expression10      go to state 64
-    expression11      go to state 65
-    expression12      go to state 66
-    incrdecr          go to state 67
-    unaryop           go to state 68
-    expression13      go to state 69
-    constant          go to state 70
+    incrdecr          go to state 55
+    unaryop           go to state 56
+    constant          go to state 57
 
 
 State 51
@@ -1046,237 +908,123 @@ State 52
 
 State 53
 
-   58 expression2: lvalue . ASSIGN expression
-   93 expression12: lvalue . incrdecr
+   58 expression: lvalue . incrdecr
+   60           | lvalue . ASSIGN expression
 
-    DECR    shift, and go to state 38
-    INCR    shift, and go to state 39
-    ASSIGN  shift, and go to state 102
+    ASSIGN  shift, and go to state 85
+    DECR    shift, and go to state 39
+    INCR    shift, and go to state 40
 
-    incrdecr  go to state 103
+    incrdecr  go to state 86
 
 
 State 54
 
    32 statement: expression . SEMI
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
 
-    SEMI  shift, and go to state 104
+    SEMI    shift, and go to state 87
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
+
+    binaryop  go to state 104
 
 
 State 55
 
-   53 expression: more .
+   59 expression: incrdecr . lvalue
 
-    $default  reduce using rule 53 (expression)
+    IDENT  shift, and go to state 105
+
+    lvalue  go to state 106
 
 
 State 56
 
-   52 expression: expression2 .
+   61 expression: unaryop . expression
 
-    $default  reduce using rule 52 (expression)
-
-
-State 57
-
-   59 expression2: expression3 .
-   60 expression3: expression3 . QUEST expression4 COLON expression4
-
-    QUEST  shift, and go to state 105
-
-    $default  reduce using rule 59 (expression2)
-
-
-State 58
-
-   61 expression3: expression4 .
-   62 expression4: expression4 . DPIPE expression5
-
-    DPIPE  shift, and go to state 106
-
-    $default  reduce using rule 61 (expression3)
-
-
-State 59
-
-   63 expression4: expression5 .
-   64 expression5: expression5 . DAMP expression6
-
-    DAMP  shift, and go to state 107
-
-    $default  reduce using rule 63 (expression4)
-
-
-State 60
-
-   65 expression5: expression6 .
-   66 expression6: expression6 . PIPE expression7
-
-    PIPE  shift, and go to state 108
-
-    $default  reduce using rule 65 (expression5)
-
-
-State 61
-
-   67 expression6: expression7 .
-   68 expression7: expression7 . AMP expression8
-
-    AMP  shift, and go to state 109
-
-    $default  reduce using rule 67 (expression6)
-
-
-State 62
-
-   69 expression7: expression8 .
-   70 expression8: expression8 . eqneqop expression9
-
-    EQUALS  shift, and go to state 110
-    NEQUAL  shift, and go to state 111
-
-    $default  reduce using rule 69 (expression7)
-
-    eqneqop  go to state 112
-
-
-State 63
-
-   71 expression8: expression9 .
-   74 expression9: expression9 . compop expression10
-
-    GT  shift, and go to state 113
-    GE  shift, and go to state 114
-    LT  shift, and go to state 115
-    LE  shift, and go to state 116
-
-    $default  reduce using rule 71 (expression8)
-
-    compop  go to state 117
-
-
-State 64
-
-   75 expression9: expression10 .
-   80 expression10: expression10 . plusminus expression11
-
-    PLUS   shift, and go to state 118
-    MINUS  shift, and go to state 119
-
-    $default  reduce using rule 75 (expression9)
-
-    plusminus  go to state 120
-
-
-State 65
-
-   81 expression10: expression11 .
-   84 expression11: expression11 . starslashmodop expression12
-
-    STAR   shift, and go to state 121
-    SLASH  shift, and go to state 122
-    MOD    shift, and go to state 123
-
-    $default  reduce using rule 81 (expression10)
-
-    starslashmodop  go to state 124
-
-
-State 66
-
-   85 expression11: expression12 .
-
-    $default  reduce using rule 85 (expression11)
-
-
-State 67
-
-   92 expression12: incrdecr . lvalue
-
-    IDENT  shift, and go to state 125
-
-    lvalue  go to state 126
-
-
-State 68
-
-   89 expression12: unaryop . expression12
-
-    IDENT      shift, and go to state 95
+    IDENT      shift, and go to state 28
     INTCONST   shift, and go to state 29
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue        go to state 96
-    expression12  go to state 127
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
-
-
-State 69
-
-   94 expression12: expression13 .
-
-    $default  reduce using rule 94 (expression12)
+    lvalue      go to state 53
+    expression  go to state 107
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
 
 
-State 70
+State 57
 
-  101 expression13: constant .
+   52 expression: constant .
 
-    $default  reduce using rule 101 (expression13)
+    $default  reduce using rule 52 (expression)
 
 
-State 71
+State 58
 
    17 formalparameter: TYPE . IDENT
    18                | TYPE . IDENT LBRACKET RBRACKET
 
-    IDENT  shift, and go to state 128
+    IDENT  shift, and go to state 108
 
 
-State 72
+State 59
 
    14 functiondeclaration: TYPE IDENT LPAR RPAR .
 
     $default  reduce using rule 14 (functiondeclaration)
 
 
-State 73
+State 60
 
    13 functiondeclaration: TYPE IDENT LPAR formallistparameters . RPAR
 
-    RPAR  shift, and go to state 129
+    RPAR  shift, and go to state 109
 
 
-State 74
+State 61
 
    15 formallistparameters: formalparameter . COMMA formallistparameters
    16                     | formalparameter .
 
-    COMMA  shift, and go to state 130
+    COMMA  shift, and go to state 110
 
     $default  reduce using rule 16 (formallistparameters)
 
 
-State 75
+State 62
 
    10 declaration: IDENT LBRACKET INTCONST . RBRACKET
 
-    RBRACKET  shift, and go to state 131
+    RBRACKET  shift, and go to state 111
 
 
-State 76
+State 63
 
    10 declaration: IDENT . LBRACKET INTCONST RBRACKET
    11            | IDENT .
@@ -1286,14 +1034,14 @@ State 76
     $default  reduce using rule 11 (declaration)
 
 
-State 77
+State 64
 
     8 listidentifiers: declaration COMMA listidentifiers .
 
     $default  reduce using rule 8 (listidentifiers)
 
 
-State 78
+State 65
 
    43 forstatement: FOR LPAR . optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR statementorblock
 
@@ -1302,38 +1050,25 @@ State 78
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
     $default  reduce using rule 45 (optionalexpression)
 
-    optionalexpression  go to state 132
+    optionalexpression  go to state 112
     lvalue              go to state 53
-    expression          go to state 133
-    more                go to state 55
-    expression2         go to state 56
-    expression3         go to state 57
-    expression4         go to state 58
-    expression5         go to state 59
-    expression6         go to state 60
-    expression7         go to state 61
-    expression8         go to state 62
-    expression9         go to state 63
-    expression10        go to state 64
-    expression11        go to state 65
-    expression12        go to state 66
-    incrdecr            go to state 67
-    unaryop             go to state 68
-    expression13        go to state 69
-    constant            go to state 70
+    expression          go to state 113
+    incrdecr            go to state 55
+    unaryop             go to state 56
+    constant            go to state 57
 
 
-State 79
+State 66
 
    46 whilepart: WHILE LPAR . expression RPAR
 
@@ -1342,58 +1077,45 @@ State 79
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue        go to state 53
-    expression    go to state 134
-    more          go to state 55
-    expression2   go to state 56
-    expression3   go to state 57
-    expression4   go to state 58
-    expression5   go to state 59
-    expression6   go to state 60
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    lvalue      go to state 53
+    expression  go to state 114
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
 
 
-State 80
+State 67
 
    42 statementorblock: statementblock .
 
     $default  reduce using rule 42 (statementorblock)
 
 
-State 81
+State 68
 
    41 statementorblock: statement .
 
     $default  reduce using rule 41 (statementorblock)
 
 
-State 82
+State 69
 
    48 dowhilestatement: DO statementorblock . whilepart SEMI
 
     WHILE  shift, and go to state 22
 
-    whilepart  go to state 135
+    whilepart  go to state 115
 
 
-State 83
+State 70
 
    39 ifstatement: IF LPAR . expression RPAR statementorblock ELSE statementblock
    40            | IF LPAR . expression RPAR statementorblock
@@ -1403,136 +1125,122 @@ State 83
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue        go to state 53
-    expression    go to state 136
-    more          go to state 55
-    expression2   go to state 56
-    expression3   go to state 57
-    expression4   go to state 58
-    expression5   go to state 59
-    expression6   go to state 60
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    lvalue      go to state 53
+    expression  go to state 116
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
 
 
-State 84
+State 71
 
    31 statement: RETURN expression . SEMI
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
 
-    SEMI  shift, and go to state 137
+    SEMI    shift, and go to state 117
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
 
-
-State 85
-
-   55 more: IDENT LPAR . expressionlist RPAR
-
-    IDENT      shift, and go to state 95
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
-
-    lvalue          go to state 96
-    expressionlist  go to state 138
-    expression3     go to state 139
-    expression4     go to state 58
-    expression5     go to state 59
-    expression6     go to state 60
-    expression7     go to state 61
-    expression8     go to state 62
-    expression9     go to state 63
-    expression10    go to state 64
-    expression11    go to state 65
-    expression12    go to state 66
-    incrdecr        go to state 67
-    unaryop         go to state 68
-    expression13    go to state 69
-    constant        go to state 70
+    binaryop  go to state 104
 
 
-State 86
+State 72
 
-   50 optionbrack: LBRACKET . expression RBRACKET
-   54 more: IDENT LBRACKET . expression RBRACKET
+   56 expression: IDENT LPAR . RPAR
+   57           | IDENT LPAR . expressionlist RPAR
 
     IDENT      shift, and go to state 28
     INTCONST   shift, and go to state 29
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
+    RPAR       shift, and go to state 118
 
-    lvalue        go to state 53
-    expression    go to state 140
-    more          go to state 55
-    expression2   go to state 56
-    expression3   go to state 57
-    expression4   go to state 58
-    expression5   go to state 59
-    expression6   go to state 60
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    lvalue          go to state 53
+    expression      go to state 119
+    expressionlist  go to state 120
+    incrdecr        go to state 55
+    unaryop         go to state 56
+    constant        go to state 57
 
 
-State 87
+State 73
+
+   50 optionbrack: LBRACKET . expression RBRACKET
+   55 expression: IDENT LBRACKET . expression RBRACKET
+
+    IDENT      shift, and go to state 28
+    INTCONST   shift, and go to state 29
+    REALCONST  shift, and go to state 30
+    STRCONST   shift, and go to state 31
+    CHARCONST  shift, and go to state 32
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
+
+    lvalue      go to state 53
+    expression  go to state 121
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
+
+
+State 74
 
    49 lvalue: IDENT optionbrack .
 
     $default  reduce using rule 49 (lvalue)
 
 
-State 88
+State 75
 
    27 statementblock: LBRACE RBRACE .
 
     $default  reduce using rule 27 (statementblock)
 
 
-State 89
+State 76
 
    26 statementblock: LBRACE liststatement . RBRACE
 
-    RBRACE  shift, and go to state 141
+    RBRACE  shift, and go to state 122
 
 
-State 90
+State 77
 
    28 liststatement: statement . liststatement
    29              | statement .
@@ -1549,18 +1257,18 @@ State 90
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
     $default  reduce using rule 29 (liststatement)
 
-    liststatement     go to state 142
-    statement         go to state 90
+    liststatement     go to state 123
+    statement         go to state 77
     keywords          go to state 47
     ifstatement       go to state 48
     forstatement      go to state 49
@@ -1569,666 +1277,696 @@ State 90
     dowhilestatement  go to state 52
     lvalue            go to state 53
     expression        go to state 54
-    more              go to state 55
-    expression2       go to state 56
-    expression3       go to state 57
-    expression4       go to state 58
-    expression5       go to state 59
-    expression6       go to state 60
-    expression7       go to state 61
-    expression8       go to state 62
-    expression9       go to state 63
-    expression10      go to state 64
-    expression11      go to state 65
-    expression12      go to state 66
-    incrdecr          go to state 67
-    unaryop           go to state 68
-    expression13      go to state 69
-    constant          go to state 70
+    incrdecr          go to state 55
+    unaryop           go to state 56
+    constant          go to state 57
 
 
-State 91
+State 78
 
-   99 expression13: LPAR TYPE . RPAR expression13
+   54 expression: AMP IDENT .
 
-    RPAR  shift, and go to state 143
-
-
-State 92
-
-  106 constant: IDENT .
-
-    $default  reduce using rule 106 (constant)
+    $default  reduce using rule 54 (expression)
 
 
-State 93
+State 79
 
-  100 expression13: LPAR expression13 . RPAR
+   64 expression: LPAR TYPE . RPAR expression
 
-    RPAR  shift, and go to state 144
-
-
-State 94
-
-   91 expression12: AMP IDENT .
-
-    $default  reduce using rule 91 (expression12)
+    RPAR  shift, and go to state 124
 
 
-State 95
+State 80
 
-   49 lvalue: IDENT . optionbrack
-  106 constant: IDENT .
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
+   65           | LPAR expression . RPAR
 
-    LBRACKET  shift, and go to state 145
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
+    RPAR    shift, and go to state 125
 
-    DECR      reduce using rule 51 (optionbrack)
-    INCR      reduce using rule 51 (optionbrack)
-    $default  reduce using rule 106 (constant)
-
-    optionbrack  go to state 87
-
-
-State 96
-
-   93 expression12: lvalue . incrdecr
-
-    DECR  shift, and go to state 38
-    INCR  shift, and go to state 39
-
-    incrdecr  go to state 103
-
-
-State 97
-
-   90 expression12: MINUS expression12 .
-
-    $default  reduce using rule 90 (expression12)
+    binaryop  go to state 104
 
 
-State 98
+State 81
 
    19 functiondefinition: functiondeclaration LBRACE declarationsorstatements RBRACE .
 
     $default  reduce using rule 19 (functiondefinition)
 
 
-State 99
+State 82
 
    21 declarationsorstatements: declorstat declarationsorstatements .
 
     $default  reduce using rule 21 (declarationsorstatements)
 
 
-State 100
+State 83
 
    30 statement: keywords SEMI .
 
     $default  reduce using rule 30 (statement)
 
 
-State 101
+State 84
 
    47 whilestatement: whilepart statementorblock . SEMI
 
-    SEMI  shift, and go to state 146
+    SEMI  shift, and go to state 126
 
 
-State 102
+State 85
 
-   58 expression2: lvalue ASSIGN . expression
+   60 expression: lvalue ASSIGN . expression
 
     IDENT      shift, and go to state 28
     INTCONST   shift, and go to state 29
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue        go to state 53
-    expression    go to state 147
-    more          go to state 55
-    expression2   go to state 56
-    expression3   go to state 57
-    expression4   go to state 58
-    expression5   go to state 59
-    expression6   go to state 60
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    lvalue      go to state 53
+    expression  go to state 127
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
 
 
-State 103
+State 86
 
-   93 expression12: lvalue incrdecr .
+   58 expression: lvalue incrdecr .
 
-    $default  reduce using rule 93 (expression12)
+    $default  reduce using rule 58 (expression)
 
 
-State 104
+State 87
 
    32 statement: expression SEMI .
 
     $default  reduce using rule 32 (statement)
 
 
-State 105
+State 88
 
-   60 expression3: expression3 QUEST . expression4 COLON expression4
+   63 expression: expression QUEST . expression COLON expression
 
-    IDENT      shift, and go to state 95
+    IDENT      shift, and go to state 28
     INTCONST   shift, and go to state 29
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue        go to state 96
-    expression4   go to state 148
-    expression5   go to state 59
-    expression6   go to state 60
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    lvalue      go to state 53
+    expression  go to state 128
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
+
+
+State 89
+
+   86 binaryop: DPIPE .
+
+    $default  reduce using rule 86 (binaryop)
+
+
+State 90
+
+   87 binaryop: DAMP .
+
+    $default  reduce using rule 87 (binaryop)
+
+
+State 91
+
+   84 binaryop: PIPE .
+
+    $default  reduce using rule 84 (binaryop)
+
+
+State 92
+
+   85 binaryop: AMP .
+
+    $default  reduce using rule 85 (binaryop)
+
+
+State 93
+
+   73 binaryop: EQUALS .
+
+    $default  reduce using rule 73 (binaryop)
+
+
+State 94
+
+   74 binaryop: NEQUAL .
+
+    $default  reduce using rule 74 (binaryop)
+
+
+State 95
+
+   76 binaryop: GT .
+
+    $default  reduce using rule 76 (binaryop)
+
+
+State 96
+
+   75 binaryop: GE .
+
+    $default  reduce using rule 75 (binaryop)
+
+
+State 97
+
+   78 binaryop: LT .
+
+    $default  reduce using rule 78 (binaryop)
+
+
+State 98
+
+   77 binaryop: LE .
+
+    $default  reduce using rule 77 (binaryop)
+
+
+State 99
+
+   79 binaryop: PLUS .
+
+    $default  reduce using rule 79 (binaryop)
+
+
+State 100
+
+   80 binaryop: MINUS .
+
+    $default  reduce using rule 80 (binaryop)
+
+
+State 101
+
+   81 binaryop: STAR .
+
+    $default  reduce using rule 81 (binaryop)
+
+
+State 102
+
+   82 binaryop: SLASH .
+
+    $default  reduce using rule 82 (binaryop)
+
+
+State 103
+
+   83 binaryop: MOD .
+
+    $default  reduce using rule 83 (binaryop)
+
+
+State 104
+
+   62 expression: expression binaryop . expression
+
+    IDENT      shift, and go to state 28
+    INTCONST   shift, and go to state 29
+    REALCONST  shift, and go to state 30
+    STRCONST   shift, and go to state 31
+    CHARCONST  shift, and go to state 32
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
+
+    lvalue      go to state 53
+    expression  go to state 129
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
+
+
+State 105
+
+   49 lvalue: IDENT . optionbrack
+
+    LBRACKET  shift, and go to state 130
+
+    $default  reduce using rule 51 (optionbrack)
+
+    optionbrack  go to state 74
 
 
 State 106
 
-   62 expression4: expression4 DPIPE . expression5
+   59 expression: incrdecr lvalue .
 
-    IDENT      shift, and go to state 95
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
-
-    lvalue        go to state 96
-    expression5   go to state 149
-    expression6   go to state 60
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    $default  reduce using rule 59 (expression)
 
 
 State 107
 
-   64 expression5: expression5 DAMP . expression6
+   61 expression: unaryop expression .
+   62           | expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
 
-    IDENT      shift, and go to state 95
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
 
-    lvalue        go to state 96
-    expression6   go to state 150
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    QUEST     [reduce using rule 61 (expression)]
+    DPIPE     [reduce using rule 61 (expression)]
+    DAMP      [reduce using rule 61 (expression)]
+    PIPE      [reduce using rule 61 (expression)]
+    AMP       [reduce using rule 61 (expression)]
+    EQUALS    [reduce using rule 61 (expression)]
+    NEQUAL    [reduce using rule 61 (expression)]
+    GT        [reduce using rule 61 (expression)]
+    GE        [reduce using rule 61 (expression)]
+    LT        [reduce using rule 61 (expression)]
+    LE        [reduce using rule 61 (expression)]
+    PLUS      [reduce using rule 61 (expression)]
+    MINUS     [reduce using rule 61 (expression)]
+    STAR      [reduce using rule 61 (expression)]
+    SLASH     [reduce using rule 61 (expression)]
+    MOD       [reduce using rule 61 (expression)]
+    $default  reduce using rule 61 (expression)
+
+    binaryop  go to state 104
 
 
 State 108
 
-   66 expression6: expression6 PIPE . expression7
-
-    IDENT      shift, and go to state 95
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
-
-    lvalue        go to state 96
-    expression7   go to state 151
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
-
-
-State 109
-
-   68 expression7: expression7 AMP . expression8
-
-    IDENT      shift, and go to state 95
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
-
-    lvalue        go to state 96
-    expression8   go to state 152
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
-
-
-State 110
-
-   72 eqneqop: EQUALS .
-
-    $default  reduce using rule 72 (eqneqop)
-
-
-State 111
-
-   73 eqneqop: NEQUAL .
-
-    $default  reduce using rule 73 (eqneqop)
-
-
-State 112
-
-   70 expression8: expression8 eqneqop . expression9
-
-    IDENT      shift, and go to state 95
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
-
-    lvalue        go to state 96
-    expression9   go to state 153
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
-
-
-State 113
-
-   76 compop: GT .
-
-    $default  reduce using rule 76 (compop)
-
-
-State 114
-
-   77 compop: GE .
-
-    $default  reduce using rule 77 (compop)
-
-
-State 115
-
-   78 compop: LT .
-
-    $default  reduce using rule 78 (compop)
-
-
-State 116
-
-   79 compop: LE .
-
-    $default  reduce using rule 79 (compop)
-
-
-State 117
-
-   74 expression9: expression9 compop . expression10
-
-    IDENT      shift, and go to state 95
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
-
-    lvalue        go to state 96
-    expression10  go to state 154
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
-
-
-State 118
-
-   82 plusminus: PLUS .
-
-    $default  reduce using rule 82 (plusminus)
-
-
-State 119
-
-   83 plusminus: MINUS .
-
-    $default  reduce using rule 83 (plusminus)
-
-
-State 120
-
-   80 expression10: expression10 plusminus . expression11
-
-    IDENT      shift, and go to state 95
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
-
-    lvalue        go to state 96
-    expression11  go to state 155
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
-
-
-State 121
-
-   86 starslashmodop: STAR .
-
-    $default  reduce using rule 86 (starslashmodop)
-
-
-State 122
-
-   87 starslashmodop: SLASH .
-
-    $default  reduce using rule 87 (starslashmodop)
-
-
-State 123
-
-   88 starslashmodop: MOD .
-
-    $default  reduce using rule 88 (starslashmodop)
-
-
-State 124
-
-   84 expression11: expression11 starslashmodop . expression12
-
-    IDENT      shift, and go to state 95
-    INTCONST   shift, and go to state 29
-    REALCONST  shift, and go to state 30
-    STRCONST   shift, and go to state 31
-    CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
-
-    lvalue        go to state 96
-    expression12  go to state 156
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
-
-
-State 125
-
-   49 lvalue: IDENT . optionbrack
-
-    LBRACKET  shift, and go to state 145
-
-    $default  reduce using rule 51 (optionbrack)
-
-    optionbrack  go to state 87
-
-
-State 126
-
-   92 expression12: incrdecr lvalue .
-
-    $default  reduce using rule 92 (expression12)
-
-
-State 127
-
-   89 expression12: unaryop expression12 .
-
-    $default  reduce using rule 89 (expression12)
-
-
-State 128
-
    17 formalparameter: TYPE IDENT .
    18                | TYPE IDENT . LBRACKET RBRACKET
 
-    LBRACKET  shift, and go to state 157
+    LBRACKET  shift, and go to state 131
 
     $default  reduce using rule 17 (formalparameter)
 
 
-State 129
+State 109
 
    13 functiondeclaration: TYPE IDENT LPAR formallistparameters RPAR .
 
     $default  reduce using rule 13 (functiondeclaration)
 
 
-State 130
+State 110
 
    15 formallistparameters: formalparameter COMMA . formallistparameters
 
-    TYPE  shift, and go to state 71
+    TYPE  shift, and go to state 58
 
-    formallistparameters  go to state 158
-    formalparameter       go to state 74
+    formallistparameters  go to state 132
+    formalparameter       go to state 61
 
 
-State 131
+State 111
 
    10 declaration: IDENT LBRACKET INTCONST RBRACKET .
 
     $default  reduce using rule 10 (declaration)
 
 
-State 132
+State 112
 
    43 forstatement: FOR LPAR optionalexpression . SEMI optionalexpression SEMI optionalexpression RPAR statementorblock
 
-    SEMI  shift, and go to state 159
+    SEMI  shift, and go to state 133
 
 
-State 133
+State 113
 
    44 optionalexpression: expression .
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
+
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
 
     $default  reduce using rule 44 (optionalexpression)
 
+    binaryop  go to state 104
 
-State 134
+
+State 114
 
    46 whilepart: WHILE LPAR expression . RPAR
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
 
-    RPAR  shift, and go to state 160
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
+    RPAR    shift, and go to state 134
+
+    binaryop  go to state 104
 
 
-State 135
+State 115
 
    48 dowhilestatement: DO statementorblock whilepart . SEMI
 
-    SEMI  shift, and go to state 161
+    SEMI  shift, and go to state 135
 
 
-State 136
+State 116
 
    39 ifstatement: IF LPAR expression . RPAR statementorblock ELSE statementblock
    40            | IF LPAR expression . RPAR statementorblock
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
 
-    RPAR  shift, and go to state 162
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
+    RPAR    shift, and go to state 136
+
+    binaryop  go to state 104
 
 
-State 137
+State 117
 
    31 statement: RETURN expression SEMI .
 
     $default  reduce using rule 31 (statement)
 
 
-State 138
+State 118
 
-   55 more: IDENT LPAR expressionlist . RPAR
+   56 expression: IDENT LPAR RPAR .
 
-    RPAR  shift, and go to state 163
-
-
-State 139
-
-   56 expressionlist: expression3 . COMMA expressionlist
-   57               | expression3 .
-   60 expression3: expression3 . QUEST expression4 COLON expression4
-
-    QUEST  shift, and go to state 105
-    COMMA  shift, and go to state 164
-
-    $default  reduce using rule 57 (expressionlist)
+    $default  reduce using rule 56 (expression)
 
 
-State 140
+State 119
+
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
+   66 expressionlist: expression . COMMA expressionlist
+   67               | expression .
+
+    QUEST   shift, and go to state 88
+    COMMA   shift, and go to state 137
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
+
+    $default  reduce using rule 67 (expressionlist)
+
+    binaryop  go to state 104
+
+
+State 120
+
+   57 expression: IDENT LPAR expressionlist . RPAR
+
+    RPAR  shift, and go to state 138
+
+
+State 121
 
    50 optionbrack: LBRACKET expression . RBRACKET
-   54 more: IDENT LBRACKET expression . RBRACKET
+   55 expression: IDENT LBRACKET expression . RBRACKET
+   62           | expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
 
-    RBRACKET  shift, and go to state 165
+    QUEST     shift, and go to state 88
+    DPIPE     shift, and go to state 89
+    DAMP      shift, and go to state 90
+    PIPE      shift, and go to state 91
+    AMP       shift, and go to state 92
+    EQUALS    shift, and go to state 93
+    NEQUAL    shift, and go to state 94
+    GT        shift, and go to state 95
+    GE        shift, and go to state 96
+    LT        shift, and go to state 97
+    LE        shift, and go to state 98
+    PLUS      shift, and go to state 99
+    MINUS     shift, and go to state 100
+    STAR      shift, and go to state 101
+    SLASH     shift, and go to state 102
+    MOD       shift, and go to state 103
+    RBRACKET  shift, and go to state 139
+
+    binaryop  go to state 104
 
 
-State 141
+State 122
 
    26 statementblock: LBRACE liststatement RBRACE .
 
     $default  reduce using rule 26 (statementblock)
 
 
-State 142
+State 123
 
    28 liststatement: statement liststatement .
 
     $default  reduce using rule 28 (liststatement)
 
 
-State 143
+State 124
 
-   99 expression13: LPAR TYPE RPAR . expression13
+   64 expression: LPAR TYPE RPAR . expression
 
-    IDENT      shift, and go to state 92
+    IDENT      shift, and go to state 28
     INTCONST   shift, and go to state 29
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    expression13  go to state 166
-    constant      go to state 70
+    lvalue      go to state 53
+    expression  go to state 140
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
 
 
-State 144
+State 125
 
-  100 expression13: LPAR expression13 RPAR .
+   65 expression: LPAR expression RPAR .
 
-    $default  reduce using rule 100 (expression13)
+    $default  reduce using rule 65 (expression)
 
 
-State 145
+State 126
+
+   47 whilestatement: whilepart statementorblock SEMI .
+
+    $default  reduce using rule 47 (whilestatement)
+
+
+State 127
+
+   60 expression: lvalue ASSIGN expression .
+   62           | expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
+
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
+
+    QUEST     [reduce using rule 60 (expression)]
+    $default  reduce using rule 60 (expression)
+
+    binaryop  go to state 104
+
+
+State 128
+
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
+   63           | expression QUEST expression . COLON expression
+
+    QUEST   shift, and go to state 88
+    COLON   shift, and go to state 141
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
+
+    binaryop  go to state 104
+
+
+State 129
+
+   62 expression: expression . binaryop expression
+   62           | expression binaryop expression .
+   63           | expression . QUEST expression COLON expression
+
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
+
+    QUEST     [reduce using rule 62 (expression)]
+    DPIPE     [reduce using rule 62 (expression)]
+    DAMP      [reduce using rule 62 (expression)]
+    PIPE      [reduce using rule 62 (expression)]
+    AMP       [reduce using rule 62 (expression)]
+    EQUALS    [reduce using rule 62 (expression)]
+    NEQUAL    [reduce using rule 62 (expression)]
+    GT        [reduce using rule 62 (expression)]
+    GE        [reduce using rule 62 (expression)]
+    LT        [reduce using rule 62 (expression)]
+    LE        [reduce using rule 62 (expression)]
+    PLUS      [reduce using rule 62 (expression)]
+    MINUS     [reduce using rule 62 (expression)]
+    STAR      [reduce using rule 62 (expression)]
+    SLASH     [reduce using rule 62 (expression)]
+    MOD       [reduce using rule 62 (expression)]
+    $default  reduce using rule 62 (expression)
+
+    binaryop  go to state 104
+
+
+State 130
 
    50 optionbrack: LBRACKET . expression RBRACKET
 
@@ -2237,164 +1975,36 @@ State 145
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue        go to state 53
-    expression    go to state 167
-    more          go to state 55
-    expression2   go to state 56
-    expression3   go to state 57
-    expression4   go to state 58
-    expression5   go to state 59
-    expression6   go to state 60
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    lvalue      go to state 53
+    expression  go to state 142
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
 
 
-State 146
-
-   47 whilestatement: whilepart statementorblock SEMI .
-
-    $default  reduce using rule 47 (whilestatement)
-
-
-State 147
-
-   58 expression2: lvalue ASSIGN expression .
-
-    $default  reduce using rule 58 (expression2)
-
-
-State 148
-
-   60 expression3: expression3 QUEST expression4 . COLON expression4
-   62 expression4: expression4 . DPIPE expression5
-
-    COLON  shift, and go to state 168
-    DPIPE  shift, and go to state 106
-
-
-State 149
-
-   62 expression4: expression4 DPIPE expression5 .
-   64 expression5: expression5 . DAMP expression6
-
-    DAMP  shift, and go to state 107
-
-    $default  reduce using rule 62 (expression4)
-
-
-State 150
-
-   64 expression5: expression5 DAMP expression6 .
-   66 expression6: expression6 . PIPE expression7
-
-    PIPE  shift, and go to state 108
-
-    $default  reduce using rule 64 (expression5)
-
-
-State 151
-
-   66 expression6: expression6 PIPE expression7 .
-   68 expression7: expression7 . AMP expression8
-
-    AMP  shift, and go to state 109
-
-    $default  reduce using rule 66 (expression6)
-
-
-State 152
-
-   68 expression7: expression7 AMP expression8 .
-   70 expression8: expression8 . eqneqop expression9
-
-    EQUALS  shift, and go to state 110
-    NEQUAL  shift, and go to state 111
-
-    $default  reduce using rule 68 (expression7)
-
-    eqneqop  go to state 112
-
-
-State 153
-
-   70 expression8: expression8 eqneqop expression9 .
-   74 expression9: expression9 . compop expression10
-
-    GT  shift, and go to state 113
-    GE  shift, and go to state 114
-    LT  shift, and go to state 115
-    LE  shift, and go to state 116
-
-    $default  reduce using rule 70 (expression8)
-
-    compop  go to state 117
-
-
-State 154
-
-   74 expression9: expression9 compop expression10 .
-   80 expression10: expression10 . plusminus expression11
-
-    PLUS   shift, and go to state 118
-    MINUS  shift, and go to state 119
-
-    $default  reduce using rule 74 (expression9)
-
-    plusminus  go to state 120
-
-
-State 155
-
-   80 expression10: expression10 plusminus expression11 .
-   84 expression11: expression11 . starslashmodop expression12
-
-    STAR   shift, and go to state 121
-    SLASH  shift, and go to state 122
-    MOD    shift, and go to state 123
-
-    $default  reduce using rule 80 (expression10)
-
-    starslashmodop  go to state 124
-
-
-State 156
-
-   84 expression11: expression11 starslashmodop expression12 .
-
-    $default  reduce using rule 84 (expression11)
-
-
-State 157
+State 131
 
    18 formalparameter: TYPE IDENT LBRACKET . RBRACKET
 
-    RBRACKET  shift, and go to state 169
+    RBRACKET  shift, and go to state 143
 
 
-State 158
+State 132
 
    15 formallistparameters: formalparameter COMMA formallistparameters .
 
     $default  reduce using rule 15 (formallistparameters)
 
 
-State 159
+State 133
 
    43 forstatement: FOR LPAR optionalexpression SEMI . optionalexpression SEMI optionalexpression RPAR statementorblock
 
@@ -2403,52 +2013,39 @@ State 159
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
     $default  reduce using rule 45 (optionalexpression)
 
-    optionalexpression  go to state 170
+    optionalexpression  go to state 144
     lvalue              go to state 53
-    expression          go to state 133
-    more                go to state 55
-    expression2         go to state 56
-    expression3         go to state 57
-    expression4         go to state 58
-    expression5         go to state 59
-    expression6         go to state 60
-    expression7         go to state 61
-    expression8         go to state 62
-    expression9         go to state 63
-    expression10        go to state 64
-    expression11        go to state 65
-    expression12        go to state 66
-    incrdecr            go to state 67
-    unaryop             go to state 68
-    expression13        go to state 69
-    constant            go to state 70
+    expression          go to state 113
+    incrdecr            go to state 55
+    unaryop             go to state 56
+    constant            go to state 57
 
 
-State 160
+State 134
 
    46 whilepart: WHILE LPAR expression RPAR .
 
     $default  reduce using rule 46 (whilepart)
 
 
-State 161
+State 135
 
    48 dowhilestatement: DO statementorblock whilepart SEMI .
 
     $default  reduce using rule 48 (dowhilestatement)
 
 
-State 162
+State 136
 
    39 ifstatement: IF LPAR expression RPAR . statementorblock ELSE statementblock
    40            | IF LPAR expression RPAR . statementorblock
@@ -2466,192 +2063,206 @@ State 162
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
     LBRACE     shift, and go to state 33
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    statementblock    go to state 80
-    statement         go to state 81
+    statementblock    go to state 67
+    statement         go to state 68
     keywords          go to state 47
     ifstatement       go to state 48
-    statementorblock  go to state 171
+    statementorblock  go to state 145
     forstatement      go to state 49
     whilepart         go to state 50
     whilestatement    go to state 51
     dowhilestatement  go to state 52
     lvalue            go to state 53
     expression        go to state 54
-    more              go to state 55
-    expression2       go to state 56
-    expression3       go to state 57
-    expression4       go to state 58
-    expression5       go to state 59
-    expression6       go to state 60
-    expression7       go to state 61
-    expression8       go to state 62
-    expression9       go to state 63
-    expression10      go to state 64
-    expression11      go to state 65
-    expression12      go to state 66
-    incrdecr          go to state 67
-    unaryop           go to state 68
-    expression13      go to state 69
-    constant          go to state 70
+    incrdecr          go to state 55
+    unaryop           go to state 56
+    constant          go to state 57
 
 
-State 163
+State 137
 
-   55 more: IDENT LPAR expressionlist RPAR .
+   66 expressionlist: expression COMMA . expressionlist
 
-    $default  reduce using rule 55 (more)
-
-
-State 164
-
-   56 expressionlist: expression3 COMMA . expressionlist
-
-    IDENT      shift, and go to state 95
+    IDENT      shift, and go to state 28
     INTCONST   shift, and go to state 29
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue          go to state 96
-    expressionlist  go to state 172
-    expression3     go to state 139
-    expression4     go to state 58
-    expression5     go to state 59
-    expression6     go to state 60
-    expression7     go to state 61
-    expression8     go to state 62
-    expression9     go to state 63
-    expression10    go to state 64
-    expression11    go to state 65
-    expression12    go to state 66
-    incrdecr        go to state 67
-    unaryop         go to state 68
-    expression13    go to state 69
-    constant        go to state 70
+    lvalue          go to state 53
+    expression      go to state 119
+    expressionlist  go to state 146
+    incrdecr        go to state 55
+    unaryop         go to state 56
+    constant        go to state 57
 
 
-State 165
+State 138
+
+   57 expression: IDENT LPAR expressionlist RPAR .
+
+    $default  reduce using rule 57 (expression)
+
+
+State 139
 
    50 optionbrack: LBRACKET expression RBRACKET .
-   54 more: IDENT LBRACKET expression RBRACKET .
+   55 expression: IDENT LBRACKET expression RBRACKET .
 
-    SEMI      reduce using rule 54 (more)
-    RPAR      reduce using rule 54 (more)
-    RBRACKET  reduce using rule 54 (more)
-    $default  reduce using rule 50 (optionbrack)
-
-
-State 166
-
-   99 expression13: LPAR TYPE RPAR expression13 .
-
-    $default  reduce using rule 99 (expression13)
+    ASSIGN    reduce using rule 50 (optionbrack)
+    DECR      reduce using rule 50 (optionbrack)
+    INCR      reduce using rule 50 (optionbrack)
+    $default  reduce using rule 55 (expression)
 
 
-State 167
+State 140
 
-   50 optionbrack: LBRACKET expression . RBRACKET
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
+   64           | LPAR TYPE RPAR expression .
 
-    RBRACKET  shift, and go to state 173
+    QUEST  shift, and go to state 88
+
+    QUEST     [reduce using rule 64 (expression)]
+    $default  reduce using rule 64 (expression)
+
+    binaryop  go to state 104
 
 
-State 168
+State 141
 
-   60 expression3: expression3 QUEST expression4 COLON . expression4
+   63 expression: expression QUEST expression COLON . expression
 
-    IDENT      shift, and go to state 95
+    IDENT      shift, and go to state 28
     INTCONST   shift, and go to state 29
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    lvalue        go to state 96
-    expression4   go to state 174
-    expression5   go to state 59
-    expression6   go to state 60
-    expression7   go to state 61
-    expression8   go to state 62
-    expression9   go to state 63
-    expression10  go to state 64
-    expression11  go to state 65
-    expression12  go to state 66
-    incrdecr      go to state 67
-    unaryop       go to state 68
-    expression13  go to state 69
-    constant      go to state 70
+    lvalue      go to state 53
+    expression  go to state 147
+    incrdecr    go to state 55
+    unaryop     go to state 56
+    constant    go to state 57
 
 
-State 169
+State 142
+
+   50 optionbrack: LBRACKET expression . RBRACKET
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
+
+    QUEST     shift, and go to state 88
+    DPIPE     shift, and go to state 89
+    DAMP      shift, and go to state 90
+    PIPE      shift, and go to state 91
+    AMP       shift, and go to state 92
+    EQUALS    shift, and go to state 93
+    NEQUAL    shift, and go to state 94
+    GT        shift, and go to state 95
+    GE        shift, and go to state 96
+    LT        shift, and go to state 97
+    LE        shift, and go to state 98
+    PLUS      shift, and go to state 99
+    MINUS     shift, and go to state 100
+    STAR      shift, and go to state 101
+    SLASH     shift, and go to state 102
+    MOD       shift, and go to state 103
+    RBRACKET  shift, and go to state 148
+
+    binaryop  go to state 104
+
+
+State 143
 
    18 formalparameter: TYPE IDENT LBRACKET RBRACKET .
 
     $default  reduce using rule 18 (formalparameter)
 
 
-State 170
+State 144
 
    43 forstatement: FOR LPAR optionalexpression SEMI optionalexpression . SEMI optionalexpression RPAR statementorblock
 
-    SEMI  shift, and go to state 175
+    SEMI  shift, and go to state 149
 
 
-State 171
+State 145
 
    39 ifstatement: IF LPAR expression RPAR statementorblock . ELSE statementblock
    40            | IF LPAR expression RPAR statementorblock .
 
-    ELSE  shift, and go to state 176
+    ELSE  shift, and go to state 150
 
     $default  reduce using rule 40 (ifstatement)
 
 
-State 172
+State 146
 
-   56 expressionlist: expression3 COMMA expressionlist .
+   66 expressionlist: expression COMMA expressionlist .
 
-    $default  reduce using rule 56 (expressionlist)
+    $default  reduce using rule 66 (expressionlist)
 
 
-State 173
+State 147
+
+   62 expression: expression . binaryop expression
+   63           | expression . QUEST expression COLON expression
+   63           | expression QUEST expression COLON expression .
+
+    QUEST   shift, and go to state 88
+    DPIPE   shift, and go to state 89
+    DAMP    shift, and go to state 90
+    PIPE    shift, and go to state 91
+    AMP     shift, and go to state 92
+    EQUALS  shift, and go to state 93
+    NEQUAL  shift, and go to state 94
+    GT      shift, and go to state 95
+    GE      shift, and go to state 96
+    LT      shift, and go to state 97
+    LE      shift, and go to state 98
+    PLUS    shift, and go to state 99
+    MINUS   shift, and go to state 100
+    STAR    shift, and go to state 101
+    SLASH   shift, and go to state 102
+    MOD     shift, and go to state 103
+
+    QUEST     [reduce using rule 63 (expression)]
+    $default  reduce using rule 63 (expression)
+
+    binaryop  go to state 104
+
+
+State 148
 
    50 optionbrack: LBRACKET expression RBRACKET .
 
     $default  reduce using rule 50 (optionbrack)
 
 
-State 174
-
-   60 expression3: expression3 QUEST expression4 COLON expression4 .
-   62 expression4: expression4 . DPIPE expression5
-
-    DPIPE  shift, and go to state 106
-
-    $default  reduce using rule 60 (expression3)
-
-
-State 175
+State 149
 
    43 forstatement: FOR LPAR optionalexpression SEMI optionalexpression SEMI . optionalexpression RPAR statementorblock
 
@@ -2660,61 +2271,48 @@ State 175
     REALCONST  shift, and go to state 30
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
     $default  reduce using rule 45 (optionalexpression)
 
-    optionalexpression  go to state 177
+    optionalexpression  go to state 151
     lvalue              go to state 53
-    expression          go to state 133
-    more                go to state 55
-    expression2         go to state 56
-    expression3         go to state 57
-    expression4         go to state 58
-    expression5         go to state 59
-    expression6         go to state 60
-    expression7         go to state 61
-    expression8         go to state 62
-    expression9         go to state 63
-    expression10        go to state 64
-    expression11        go to state 65
-    expression12        go to state 66
-    incrdecr            go to state 67
-    unaryop             go to state 68
-    expression13        go to state 69
-    constant            go to state 70
+    expression          go to state 113
+    incrdecr            go to state 55
+    unaryop             go to state 56
+    constant            go to state 57
 
 
-State 176
+State 150
 
    39 ifstatement: IF LPAR expression RPAR statementorblock ELSE . statementblock
 
     LBRACE  shift, and go to state 33
 
-    statementblock  go to state 178
+    statementblock  go to state 152
 
 
-State 177
+State 151
 
    43 forstatement: FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression . RPAR statementorblock
 
-    RPAR  shift, and go to state 179
+    RPAR  shift, and go to state 153
 
 
-State 178
+State 152
 
    39 ifstatement: IF LPAR expression RPAR statementorblock ELSE statementblock .
 
     $default  reduce using rule 39 (ifstatement)
 
 
-State 179
+State 153
 
    43 forstatement: FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR . statementorblock
 
@@ -2731,44 +2329,31 @@ State 179
     STRCONST   shift, and go to state 31
     CHARCONST  shift, and go to state 32
     LBRACE     shift, and go to state 33
-    LPAR       shift, and go to state 35
-    BANG       shift, and go to state 36
-    TILDE      shift, and go to state 37
-    DECR       shift, and go to state 38
-    INCR       shift, and go to state 39
-    AMP        shift, and go to state 40
-    MINUS      shift, and go to state 41
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    statementblock    go to state 80
-    statement         go to state 81
+    statementblock    go to state 67
+    statement         go to state 68
     keywords          go to state 47
     ifstatement       go to state 48
-    statementorblock  go to state 180
+    statementorblock  go to state 154
     forstatement      go to state 49
     whilepart         go to state 50
     whilestatement    go to state 51
     dowhilestatement  go to state 52
     lvalue            go to state 53
     expression        go to state 54
-    more              go to state 55
-    expression2       go to state 56
-    expression3       go to state 57
-    expression4       go to state 58
-    expression5       go to state 59
-    expression6       go to state 60
-    expression7       go to state 61
-    expression8       go to state 62
-    expression9       go to state 63
-    expression10      go to state 64
-    expression11      go to state 65
-    expression12      go to state 66
-    incrdecr          go to state 67
-    unaryop           go to state 68
-    expression13      go to state 69
-    constant          go to state 70
+    incrdecr          go to state 55
+    unaryop           go to state 56
+    constant          go to state 57
 
 
-State 180
+State 154
 
    43 forstatement: FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR statementorblock .
 

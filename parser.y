@@ -50,18 +50,20 @@
 
 
 //we set the associativity left to right or right to left..
-%left LPAR RPAR LBRACKET RBRACKET 
-%right BANG TILDE DECR INCR AMP 
-%left STAR SLASH MOD 
-%left PLUS MINUS 
-%left GT GE LT LE
-%left EQUALS NEQUAL
-%left PIPE
-%left DAMP
-%left DPIPE
-%right ASSIGN
 %left COMMA
-%nonassoc UMINUS
+%right ASSIGN
+%right QUESTCOLON
+%left DPIPE
+%left DAMP
+%left PIPE
+%left AMP 
+%left EQUALS NEQUAL
+%left GT GE LT LE
+%left PLUS MINUS 
+%left STAR SLASH MOD 
+%right BANG TILDE DECR INCR  
+%right UMINUS UAMP
+%left LPAR RPAR LBRACKET RBRACKET 
 
 /*
 Operator precedence is determined by the 
@@ -114,31 +116,19 @@ dowhilestatement : DO statementorblock whilepart SEMI ;
 lvalue : IDENT optionbrack  ;
 optionbrack : LBRACKET expression RBRACKET | %empty;	
 //RENAME FOR MORE CLARITY....
-expression : expression2  | more ;
-more : IDENT LBRACKET expression RBRACKET | IDENT LPAR expressionlist RPAR ;
-expressionlist : expression3 COMMA expressionlist | expression3 ; 
-
-expression2 : lvalue ASSIGN expression | expression3;
-expression3 : expression3 QUEST expression4 COLON expression4  | expression4;
-expression4 : expression4 DPIPE expression5 | expression5;
-expression5 : expression5 DAMP expression6 | expression6;
-expression6 : expression6 PIPE expression7 | expression7;
-expression7 : expression7 AMP expression8 | expression8;
-expression8 : expression8 eqneqop expression9 | expression9;
-eqneqop : EQUALS | NEQUAL;
-expression9 : expression9 compop expression10 | expression10;
-compop : GT | GE | LT | LE;
-expression10 :  expression10 plusminus expression11 | expression11;
-plusminus : PLUS | MINUS;
-expression11 : expression11 starslashmodop expression12 | expression12;
-starslashmodop : STAR | SLASH | MOD;
-expression12 : unaryop expression12 | MINUS expression12 %prec UMINUS | AMP IDENT %prec UMINUS| incrdecr lvalue | lvalue incrdecr 
-				|expression13;
-incrdecr : INCR | DECR;
-unaryop : BANG | TILDE   ;
-expression13 : LPAR TYPE RPAR expression13 | LPAR expression13 RPAR | constant;
-constant : CHARCONST | INTCONST | REALCONST | STRCONST | IDENT ;
-
+expression 	: constant | IDENT | AMP IDENT %prec UAMP | IDENT LBRACKET expression RBRACKET 
+			| IDENT LPAR  RPAR | IDENT LPAR expressionlist RPAR  
+			| lvalue incrdecr | incrdecr lvalue 
+			| lvalue ASSIGN expression | unaryop expression | expression binaryop expression 
+			| expression QUEST expression COLON expression %prec QUESTCOLON 
+			| LPAR TYPE RPAR expression | LPAR expression RPAR ;
+			
+expressionlist : expression COMMA expressionlist | expression ; 
+incrdecr	: INCR | DECR ; 
+unaryop 	: MINUS %prec UMINUS | BANG | TILDE;
+binaryop 	: EQUALS | NEQUAL | GE | GT | LE | LT
+			| PLUS | MINUS | STAR | SLASH | MOD | PIPE | AMP | DPIPE | DAMP;
+constant	: INTCONST | REALCONST | STRCONST | CHARCONST;
 
 
 %%

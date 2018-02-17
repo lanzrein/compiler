@@ -61,6 +61,9 @@ int ifStack[MAX_NESTING];
 int readingif = 0;
 int elseFlag = 0;
 
+//flag for open comment
+int opencomment = 0;
+
 
 
 %}
@@ -247,7 +250,7 @@ ENDIF #endif
 
 
 {ENDIF}		{if(readingif == 0){
-				fprintf(stderr,"Error, endif encountered outside of an if\n");BEGIN(INITIAL);
+				fprintf(stderr,"Error, endif encountered outside of an if. Line : %d, File : %s \n", yylineno, currName);BEGIN(INITIAL);
 				return 0;
 				}else{
 					elseFlag = 0;
@@ -351,11 +354,11 @@ ENDIF #endif
 <INCLUDECND>"."	{fprintf(stderr,"Error expected file name in quotes got : %s.\n",yytext);BEGIN(INITIAL);}
 
 
-"\/\*"		{if(debug){printf("Multi line comment start\n");}BEGIN(COMMENTMULTI);}
+"\/\*"		{if(debug){printf("Multi line comment start\n");}opencomment = 1;BEGIN(COMMENTMULTI);}
 <COMMENTMULTI>\n	{yylineno++;}
 <COMMENTMULTI>[^*\n]*	/*discard*/
 <COMMENTMULTI>"*"+[^*/\n]* /*discard*/
-<COMMENTMULTI>"*"+"/"	{if(debug){printf("End of multi line comment\n");}BEGIN(INITIAL);}
+<COMMENTMULTI>"*"+"/"	{if(debug){printf("End of multi line comment\n");}opencomment = 0;BEGIN(INITIAL);}
 
 
 "\/\/"		{if(debug){printf("Comment detected.\n");}BEGIN(COMMENTSINGLE);}
@@ -448,6 +451,11 @@ ENDIF #endif
 
 
 <<EOF>> 	{
+				if(opencomment){
+				//if we have a comment block not closed properly
+					fprintf(stderr,"Error, open block not closed correctly\n");
+					exit(1);
+				}
 				if(debug){
 					printf("File %s is over! Line total : %d\n",currName,yylineno);
 					printf("Pointer states : Sub %d , Files %d \n",substitutionPointer, currPtr);
