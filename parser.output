@@ -37,11 +37,11 @@ Grammar
    17 formalparameter: TYPE IDENT
    18                | TYPE IDENT LBRACKET RBRACKET
 
-   19 functiondefinition: functiondeclaration LBRACE declarationsorstatements RBRACE
+   19 functiondefinition: functiondeclaration LBRACE body RBRACE
    20                   | functiondeclaration LBRACE RBRACE
 
-   21 declarationsorstatements: declorstat declarationsorstatements
-   22                         | declorstat
+   21 body: declorstat body
+   22     | declorstat
 
    23 declorstat: variabledeclaration
    24           | statement
@@ -64,7 +64,7 @@ Grammar
    37 keywords: BREAK
    38         | CONTINUE
 
-   39 ifstatement: IF LPAR expression RPAR statementorblock ELSE statementblock
+   39 ifstatement: IF LPAR expression RPAR statementorblock ELSE statementorblock
    40            | IF LPAR expression RPAR statementorblock
 
    41 statementorblock: statement
@@ -213,12 +213,12 @@ formalparameter (61)
     on left: 17 18, on right: 15 16
 functiondefinition (62)
     on left: 19 20, on right: 6
-declarationsorstatements (63)
+body (63)
     on left: 21 22, on right: 19 21
 declorstat (64)
     on left: 23 24 25, on right: 21 22
 statementblock (65)
-    on left: 26 27, on right: 25 39 42
+    on left: 26 27, on right: 25 42
 liststatement (66)
     on left: 28 29, on right: 26 28
 statement (67)
@@ -334,7 +334,7 @@ State 6
 State 7
 
    12 functionprototype: functiondeclaration . SEMI
-   19 functiondefinition: functiondeclaration . LBRACE declarationsorstatements RBRACE
+   19 functiondefinition: functiondeclaration . LBRACE body RBRACE
    20                   | functiondeclaration . LBRACE RBRACE
 
     LBRACE  shift, and go to state 14
@@ -394,7 +394,7 @@ State 13
 
 State 14
 
-   19 functiondefinition: functiondeclaration LBRACE . declarationsorstatements RBRACE
+   19 functiondefinition: functiondeclaration LBRACE . body RBRACE
    20                   | functiondeclaration LBRACE . RBRACE
 
     TYPE       shift, and go to state 20
@@ -420,22 +420,22 @@ State 14
     INCR       shift, and go to state 40
     LPAR       shift, and go to state 41
 
-    variabledeclaration       go to state 42
-    declarationsorstatements  go to state 43
-    declorstat                go to state 44
-    statementblock            go to state 45
-    statement                 go to state 46
-    keywords                  go to state 47
-    ifstatement               go to state 48
-    forstatement              go to state 49
-    whilepart                 go to state 50
-    whilestatement            go to state 51
-    dowhilestatement          go to state 52
-    lvalue                    go to state 53
-    expression                go to state 54
-    incrdecr                  go to state 55
-    unaryop                   go to state 56
-    constant                  go to state 57
+    variabledeclaration  go to state 42
+    body                 go to state 43
+    declorstat           go to state 44
+    statementblock       go to state 45
+    statement            go to state 46
+    keywords             go to state 47
+    ifstatement          go to state 48
+    forstatement         go to state 49
+    whilepart            go to state 50
+    whilestatement       go to state 51
+    dowhilestatement     go to state 52
+    lvalue               go to state 53
+    expression           go to state 54
+    incrdecr             go to state 55
+    unaryop              go to state 56
+    constant             go to state 57
 
 
 State 15
@@ -548,7 +548,7 @@ State 23
 
 State 24
 
-   39 ifstatement: IF . LPAR expression RPAR statementorblock ELSE statementblock
+   39 ifstatement: IF . LPAR expression RPAR statementorblock ELSE statementorblock
    40            | IF . LPAR expression RPAR statementorblock
 
     LPAR  shift, and go to state 70
@@ -764,15 +764,15 @@ State 42
 
 State 43
 
-   19 functiondefinition: functiondeclaration LBRACE declarationsorstatements . RBRACE
+   19 functiondefinition: functiondeclaration LBRACE body . RBRACE
 
     RBRACE  shift, and go to state 81
 
 
 State 44
 
-   21 declarationsorstatements: declorstat . declarationsorstatements
-   22                         | declorstat .
+   21 body: declorstat . body
+   22     | declorstat .
 
     TYPE       shift, and go to state 20
     FOR        shift, and go to state 21
@@ -796,24 +796,24 @@ State 44
     INCR       shift, and go to state 40
     LPAR       shift, and go to state 41
 
-    $default  reduce using rule 22 (declarationsorstatements)
+    $default  reduce using rule 22 (body)
 
-    variabledeclaration       go to state 42
-    declarationsorstatements  go to state 82
-    declorstat                go to state 44
-    statementblock            go to state 45
-    statement                 go to state 46
-    keywords                  go to state 47
-    ifstatement               go to state 48
-    forstatement              go to state 49
-    whilepart                 go to state 50
-    whilestatement            go to state 51
-    dowhilestatement          go to state 52
-    lvalue                    go to state 53
-    expression                go to state 54
-    incrdecr                  go to state 55
-    unaryop                   go to state 56
-    constant                  go to state 57
+    variabledeclaration  go to state 42
+    body                 go to state 82
+    declorstat           go to state 44
+    statementblock       go to state 45
+    statement            go to state 46
+    keywords             go to state 47
+    ifstatement          go to state 48
+    forstatement         go to state 49
+    whilepart            go to state 50
+    whilestatement       go to state 51
+    dowhilestatement     go to state 52
+    lvalue               go to state 53
+    expression           go to state 54
+    incrdecr             go to state 55
+    unaryop              go to state 56
+    constant             go to state 57
 
 
 State 45
@@ -1117,7 +1117,7 @@ State 69
 
 State 70
 
-   39 ifstatement: IF LPAR . expression RPAR statementorblock ELSE statementblock
+   39 ifstatement: IF LPAR . expression RPAR statementorblock ELSE statementorblock
    40            | IF LPAR . expression RPAR statementorblock
 
     IDENT      shift, and go to state 28
@@ -1325,16 +1325,16 @@ State 80
 
 State 81
 
-   19 functiondefinition: functiondeclaration LBRACE declarationsorstatements RBRACE .
+   19 functiondefinition: functiondeclaration LBRACE body RBRACE .
 
     $default  reduce using rule 19 (functiondefinition)
 
 
 State 82
 
-   21 declarationsorstatements: declorstat declarationsorstatements .
+   21 body: declorstat body .
 
-    $default  reduce using rule 21 (declarationsorstatements)
+    $default  reduce using rule 21 (body)
 
 
 State 83
@@ -1709,7 +1709,7 @@ State 115
 
 State 116
 
-   39 ifstatement: IF LPAR expression . RPAR statementorblock ELSE statementblock
+   39 ifstatement: IF LPAR expression . RPAR statementorblock ELSE statementorblock
    40            | IF LPAR expression . RPAR statementorblock
    62 expression: expression . binaryop expression
    63           | expression . QUEST expression COLON expression
@@ -2047,7 +2047,7 @@ State 135
 
 State 136
 
-   39 ifstatement: IF LPAR expression RPAR . statementorblock ELSE statementblock
+   39 ifstatement: IF LPAR expression RPAR . statementorblock ELSE statementorblock
    40            | IF LPAR expression RPAR . statementorblock
 
     FOR        shift, and go to state 21
@@ -2211,7 +2211,7 @@ State 144
 
 State 145
 
-   39 ifstatement: IF LPAR expression RPAR statementorblock . ELSE statementblock
+   39 ifstatement: IF LPAR expression RPAR statementorblock . ELSE statementorblock
    40            | IF LPAR expression RPAR statementorblock .
 
     ELSE  shift, and go to state 150
@@ -2291,11 +2291,43 @@ State 149
 
 State 150
 
-   39 ifstatement: IF LPAR expression RPAR statementorblock ELSE . statementblock
+   39 ifstatement: IF LPAR expression RPAR statementorblock ELSE . statementorblock
 
-    LBRACE  shift, and go to state 33
+    FOR        shift, and go to state 21
+    WHILE      shift, and go to state 22
+    DO         shift, and go to state 23
+    IF         shift, and go to state 24
+    BREAK      shift, and go to state 25
+    CONTINUE   shift, and go to state 26
+    RETURN     shift, and go to state 27
+    IDENT      shift, and go to state 28
+    INTCONST   shift, and go to state 29
+    REALCONST  shift, and go to state 30
+    STRCONST   shift, and go to state 31
+    CHARCONST  shift, and go to state 32
+    LBRACE     shift, and go to state 33
+    AMP        shift, and go to state 35
+    MINUS      shift, and go to state 36
+    BANG       shift, and go to state 37
+    TILDE      shift, and go to state 38
+    DECR       shift, and go to state 39
+    INCR       shift, and go to state 40
+    LPAR       shift, and go to state 41
 
-    statementblock  go to state 152
+    statementblock    go to state 67
+    statement         go to state 68
+    keywords          go to state 47
+    ifstatement       go to state 48
+    statementorblock  go to state 152
+    forstatement      go to state 49
+    whilepart         go to state 50
+    whilestatement    go to state 51
+    dowhilestatement  go to state 52
+    lvalue            go to state 53
+    expression        go to state 54
+    incrdecr          go to state 55
+    unaryop           go to state 56
+    constant          go to state 57
 
 
 State 151
@@ -2307,7 +2339,7 @@ State 151
 
 State 152
 
-   39 ifstatement: IF LPAR expression RPAR statementorblock ELSE statementblock .
+   39 ifstatement: IF LPAR expression RPAR statementorblock ELSE statementorblock .
 
     $default  reduce using rule 39 (ifstatement)
 

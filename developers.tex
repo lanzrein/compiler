@@ -150,4 +150,137 @@ The program will check to not have twice the same identifier for a define and al
 Preprocessing if instructions is straight forward. When encountering an ifdef, we check if it is or not defined, and if it is continue scanning until and else or endif is encountered. In the other case we activate an option that forces to ignore furter input until and else or endif is encountered. \\
 If encountering and else we do the opposite of what was done before ( ignoring $\Rightarrow$ reading, reading $\Rightarrow$ ignoring). If an endif is encountered, we set all flags used to 0 and continue reading. \\
 In case of nested ifs, there is a stack that can handle at what level we are and what instructions to ignore. 
+
+\section{Part 2 : Parser}
+\subsection{Design}
+We only add one file during this stage of the project. It is the file parser.y. With the help of the bison library, we can with relative ease write a grammar for our subset of the C language and decide if a given input file has a correct syntax or not. We also make some minor changes to the lexer file and update it so it links perfectly with the parser file. 
+To use the program, like before we still have the Makefile that takes care of compiling and linking. It might produce a few warning messages because of shift-reduce conflicts, but as explained further we have taken care of them. 
+Once the program is compiled do : \begin{lstlisting}[language=bash]
+./parser <file> [debug]
+\end{lstlisting}
+Where file is name of the file to parse. You can add an option to debug which might be useful to track parsing errors. \\
+On successful run, the parser won't produce any outcome. On error, the parser will output the type of error, the line where it was encountered as well as the file. Moreover it will say on what terminal the syntax error appeared. 
+\subsection{Grammar}
+We need to write a grammar for our C language. The grammar is detailed in the parser.y file but we transcipt it in a more friendly to read format in our appendix \ref{grammar}. All the conflicts are solved using disambiguating rules. For instance the precedence of operators, or the dangling else problem is solved using a few helpful functions from the bison library. The warning messages still appear but the issues have been taken care of. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+%% APPENDIX 
+\appendix
+\section{\\Grammar of our C language subset}
+\label{grammar}
+We propose here a possible grammar for the task we have to do. Most of the terminals are written as is but the ones not explicitly written represent the tokens from part 1 of the project. For example {\sc SEMI} represents the semi-columns encountered. Moreover the non-terminal symbol {\%empty} represents an empty symbol. 
+\subsection*{Grammar}
+
+Let $program$ be the start symbol. 
+\begin{eqnarray}
+  \mathit{program} & \rightarrow & \mathit{sentences} \quad ;
+  \\
+    \mathit{sentences} & \rightarrow & \mathit{sentence} \quad \mathit{sentences} \quad  \\
+    & | & \quad \mathit{sentence} \quad ;
+    \\
+      \mathit{sentence} & \rightarrow & \mathit{variabledeclaration} \quad \\
+      & |& \mathit{functionprototype} \quad \\
+      & |& \mathit{functiondeclaration} \quad ;
+     %% About variable declaration 
+\\
+  \mathit{variabledeclaration} & \rightarrow & \mathit{TYPE} \quad \mathit{listidentifiers} \quad \mathit{SEMI} \quad ; 
+  \\
+  \mathit{listidentifiers} & \rightarrow & \mathit{declaration} \quad \mathit{,} \quad \mathit{listidentifiers} \quad   \\
+  &  |& \mathit{declaration} \quad ; \\
+\\
+  \mathit{declaration} & \rightarrow & \mathit{IDENT} \quad \mathit{[} \quad  \mathit{INTCONST} \quad \mathit{]} \quad  \\
+  & | & \mathit{IDENT} ;  \\
+  %% About function prototypes 
+  \mathit{functionprototype} & \rightarrow &  \mathit{functiondeclaration}  \quad \mathit{SEMI} \quad ;\\
+  \mathit{functiondeclaration} & \rightarrow & \mathit{TYPE} \quad \mathit{IDENT} \quad  \mathit{(} \mathit{)} \\
+  & | & \mathit{IDENT} \quad \mathit{(} \quad \mathit{formallistparameters} \quad \mathit{)}  \\ 
+  & | & \mathit{TYPE} \quad \mathit{IDENT} \quad \mathit{(} \quad \mathit{)}\\
+   \mathit{formallistparameters} & \rightarrow & \mathit{formalparamater} \quad \mathit{formallistparameters}  | \\
+   & | & \mathit{formalparameter} \\
+   \mathit{formalparameter} & \rightarrow & \mathit{TYPE} \quad \mathit{IDENT}  \\
+   & | & \mathit{TYPE} \quad \mathit{IDENT} \quad \mathit{[} \quad \mathit{]} ; \\
+   \mathit{functiondefinition} & \Rightarrow & \mathit{functiondeclaration} \mathit{\{}\quad \mathit{body}  \quad \mathit{\}}  \\
+   & | & \mathit{functiondeclaration} \quad \mathit{\{} \quad \mathit{\}} ;  \\
+   \mathit{body} & \Rightarrow & \mathit{declorstat} \quad \mathit{body} \\
+   & | & \mathit{declorstat} ; \\
+   \mathit{declorstat} & \Rightarrow & \mathit{variabledeclaration} \\
+   & | & \mathit{statement}\\
+   & | & \mathit{statementblock} \\
+   \mathit{statementblock} & \Rightarrow & \mathit{[} \quad \mathit{liststatements} \quad \mathit{]}\\
+   & | & \mathit{[} \quad \mathit{]}\\
+   \mathit{liststatement} & \Rightarrow & \mathit{statement} \quad \mathit{liststatement} \\
+   & | & \mathit{statement} ; \\
+   %% About statements....
+   \mathit{statement} & \Rightarrow & \mathit{keywords} \quad \mathit{SEMI}\\
+   & | & \mathit{RETURN} \quad \mathit{expression} \quad \mathit{SEMI}\\
+   & | & \mathit{expression} \quad \mathit{SEMI} \\
+   & | & \mathit{ifstatement} \\
+   & | & \mathit{forstatement} \\
+   & | & \mathit{whilestatement} \\
+   & | & \mathit{dowhilestatement} ;\\
+   \mathit{keywords} & \Rightarrow & \mathit{BREAK} \\
+   & | & \mathit{CONTINUE};\\
+   %%more on specific statements
+   \mathit{ifstatement} & \Rightarrow & \mathit{IF} \mathit{(} \mathit{expression} \mathit{)} \mathit{statementorblock} \quad \mathit{ELSE} \quad \mathit{statementorblock} ;\\
+   & | & \mathit{IF} \mathit{(} \mathit{expression} \mathit{)} \quad \mathit{statementorblock} \\
+   \mathit{statementorblock} & \Rightarrow & \mathit{statement} \\
+   &| & \mathit{statementblock};\\
+   %% for statement 
+   \mathit{forstatement} & \Rightarrow & \mathit{FOR} \mathit{(} \mathit{optionexpr;optionexpr;optionexpr)}\quad \mathit{statementorblock};\\
+   \mathit{optionexpr} & \Rightarrow & \mathit{expression} \\
+   &  | & \mathit{\%empty};\\
+   %%while
+   \mathit{whilepart} & \Rightarrow & \mathit{WHILE}\quad \mathit{(} \quad \mathit{expression}\quad\mathit{)} ; \\
+   \mathit{whilestatement} & \Rightarrow & \mathit{whilepart} \quad \mathit{statementorblock} \quad \mathit{SEMI} ; \\
+   \mathit{dowhilestatement} & \Rightarrow & \mathit{DO} \quad \mathit{statementorblock} \quad \mathit{whilepart} \quad \mathit{SEMI} ; \\
+   %%lvalues
+   \mathit{lvalue} & \Rightarrow & \mathit{optionbracket} ; \\
+   \mathit{optionbracket} & \Rightarrow & \mathit{[}\quad\mathit{expression}\quad\mathit{]}\\
+   &|& \mathit{\%empty};\\
+   %%expressions.. almost done ... biggest chunk
+   \mathit{expression} & \Rightarrow & \mathit{IDENT}\\
+    & | & \mathit{\&} \quad \mathit{IDENT}\\
+    & | & \mathit{IDENT} \mathit{[}\quad\mathit{expression}\mathit{]}\\
+    & | & \mathit{IDENT}\quad\mathit{(}\quad\mathit{)} \\
+    & | & \mathit{IDENT} \quad \mathit{(} \quad\mathit{expressionlist} \mathit{)}\\
+    & | & \mathit{lvalue} \quad \mathit{incrdecr} \\
+    & | & \mathit{incredecr} \quad \mathit{lvalue} \\
+    & | & \mathit{lvalue} \quad \mathit{=} \quad \mathit{expression}\\
+    & | & \mathit{unaryop} \quad \mathit{expression}\\
+    & | & \mathit{expression} \quad \mathit{binaryop} \quad \mathit{expression}\\
+    & | & \mathit{expression} \mathit{?} \mathit{expression}\mathit{:}\mathit{expression}\\
+    & | & \mathit{(}\quad\mathit{TYPE}\mathit{)}\quad\mathit{expression}\\
+    & | & \mathit{(}\quad\mathit{expression}\quad\mathit{)}\\
+    & | & \mathit{constant} ; \\
+    \mathit{expressionlist} & \Rightarrow & \mathit{expression}\quad \mathit{,}\quad\mathit{expressionlist}\\
+    & | & \mathit{expression};\\
+    \mathit{incrdecr} & \Rightarrow & \mathit{++} \\
+    & | & \mathit{--}\\
+    \mathit{unaryop} & \Rightarrow & \mathit{-} \\
+    & | & \mathit{!}\\
+    & | &\mathit{~}\\
+    \mathit{binaryop} & \Rightarrow & \mathit{==} \\
+    & | & \mathit{!=}\\
+    & | & \mathit{<} \\
+    & | & \mathit{<=}\\
+    & | & \mathit{>}\\
+    & | & \mathit{>=}\\
+    & | & \mathit{+}\\
+    & | & \mathit{-}\\
+    & | & \mathit{*}\\
+    & | & \mathit{/}\\
+    & | & \mathit{|}\\
+    & | & \mathit{\&}\\
+    & | & \mathit{\&\&}\\
+    & | & \mathit{||};\\
+    \mathit{constant} & \Rightarrow & \mathit{INTCONST}\\
+    & | &\mathit{REALCONST}\\
+    & | &\mathit{STRCONST}\\
+    & | &\mathit{CHARCONST};
+\end{eqnarray}
 \end{document}
