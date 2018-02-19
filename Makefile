@@ -15,4 +15,4 @@ lex.yy.c: lexer.l
 	flex lexer.l
 
 clean:
-	rm -rf *.o lex.yy.c 
+	rm -rf *.o lex.yy.c parser.tab.* 
