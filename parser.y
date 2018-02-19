@@ -25,7 +25,9 @@
 %}
 
 
-// all of our tokens....
+
+
+// all remaining tokens....
 %token TYPE
 %token FOR
 %token WHILE
@@ -42,19 +44,14 @@
 %token STRCONST
 %token CHARCONST
 
-%token LBRACE
-%token RBRACE
+%token LBRACE RBRACE
 %token SEMI
-%token QUEST
-%token COLON
 
 
-
-
-//we set the associativity left to right or right to left..
+//we set priority and the associativity left to right or right to left..
 %left COMMA
 %right ASSIGN
-%right QUESTCOLON
+%right QUEST COLON QUESTCOLON //psuedo token for ternary expression (expr ? expr : expr)
 %left DPIPE
 %left DAMP
 %left PIPE
@@ -63,9 +60,14 @@
 %left GT GE LT LE
 %left PLUS MINUS 
 %left STAR SLASH MOD 
-%right BANG TILDE DECR INCR  
-%right UMINUS UAMP
+%right BANG TILDE DECR INCR  UAMP UMINUS PARTYPE //pseudo token for casting ((type) )
 %left LPAR RPAR LBRACKET RBRACKET 
+
+
+
+
+
+
 
 /*
 Operator precedence is determined by the 
@@ -103,7 +105,7 @@ liststatement : statement liststatement | statement ;
 
 //about statements...
 
-statement : keywords SEMI | RETURN expression SEMI | expression SEMI | ifstatement | forstatement | whilestatement | dowhilestatement ; 
+statement : SEMI| keywords SEMI | RETURN expression SEMI | expression SEMI | ifstatement | forstatement | whilestatement | dowhilestatement ; 
 keywords : BREAK | CONTINUE; 
 //more specifics on statements 
 
@@ -113,25 +115,49 @@ statementorblock : statement | statementblock ;
 forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR statementorblock
 optionalexpression : expression  | %empty ;
 whilepart : WHILE LPAR expression RPAR ; 
-whilestatement : whilepart statementorblock SEMI ; 
+whilestatement : whilepart statementorblock ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
 lvalue : IDENT optionbrack  ;
 optionbrack : LBRACKET expression RBRACKET | %empty;	
-//RENAME FOR MORE CLARITY....
-expression 	: constant | IDENT | AMP IDENT %prec UAMP | IDENT LBRACKET expression RBRACKET 
-			| IDENT LPAR  RPAR | IDENT LPAR expressionlist RPAR  
-			| lvalue incrdecr | incrdecr lvalue 
-			| lvalue ASSIGN expression | unaryop expression | expression binaryop expression 
-			| expression QUEST expression COLON expression %prec QUESTCOLON 
-			| LPAR TYPE RPAR expression | LPAR expression RPAR ;
+expression 	: constant
+			| IDENT 
+			| AMP IDENT %prec UAMP 
+			| IDENT LBRACKET expression RBRACKET 
+			| IDENT LPAR  RPAR 
+			| IDENT LPAR expressionlist RPAR  
+			| lvalue incrdecr
+			| incrdecr lvalue 
+			| lvalue ASSIGN expression 
+			| binaryop 
+			| unaryop 
+			| ternaryexpr
+			| LPAR TYPE RPAR expression %prec PARTYPE
+			| LPAR expression RPAR;			
 			
+ternaryexpr 		: expression QUEST expression COLON expression 
 expressionlist : expression COMMA expressionlist | expression ; 
 incrdecr	: INCR | DECR ; 
 // careful when using unary minus -> can't do --2 because it will be DECR 2, need to either do - -2 OR -(-2)
-unaryop 	: MINUS %prec UMINUS | BANG | TILDE ; 
-binaryop 	: EQUALS | NEQUAL | GE | GT | LE | LT
-			| PLUS | MINUS | STAR | SLASH | MOD | PIPE | AMP | DPIPE | DAMP;
+unaryop 	: MINUS expression %prec UMINUS 
+			| BANG expression
+			| TILDE expression; 
+binaryop 	: expression EQUALS expression
+			| expression NEQUAL expression 
+			|expression GE expression
+			|expression GT expression
+			|expression LE expression
+			|expression LT expression
+			|expression PLUS expression
+			|expression MINUS expression 
+			|expression STAR expression 
+			|expression SLASH expression
+			|expression MOD expression
+			|expression PIPE expression
+			|expression AMP expression
+			|expression DPIPE expression
+			|expression DAMP expression;
+			
 constant	: INTCONST | REALCONST | STRCONST | CHARCONST;
 
 

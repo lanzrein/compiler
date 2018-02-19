@@ -7,7 +7,7 @@
 
 \title{COM S 440 Project}
 \author{Johan Lanzrein}
-\date{January 2018}
+\date{Spring 2018}
 
 \begin{document}
 
@@ -161,7 +161,11 @@ Once the program is compiled do : \begin{lstlisting}[language=bash]
 Where file is name of the file to parse. You can add an option to debug which might be useful to track parsing errors. \\
 On successful run, the parser won't produce any outcome. On error, the parser will output the type of error, the line where it was encountered as well as the file. Moreover it will say on what terminal the syntax error appeared. 
 \subsection{Grammar}
-We need to write a grammar for our C language. The grammar is detailed in the parser.y file but we transcipt it in a more friendly to read format in our appendix \ref{grammar}. All the conflicts are solved using disambiguating rules. For instance the precedence of operators, or the dangling else problem is solved using a few helpful functions from the bison library. The warning messages still appear but the issues have been taken care of. 
+We need to write a grammar for our C language. The grammar is detailed in the parser.y file but we transcript it in a more friendly to read format in our appendix \ref{grammar}. All the conflicts are solved using disambiguating rules. For instance the precedence of operators, or the dangling else problem is solved using a few helpful functions from the bison library. This allows to get rid of all shift / reduce or reduce / reduce conflicts that could appear while compiling the project. 
+Note that we do not have the exact same form in the file parser.y, as the one described in appendix \ref{grammar}. They are nonetheless identical.\\
+\subsection{Structures}
+No particular structures have been added during this part of the project as we simply decide if an input file follows a particular grammar. 
+The only outside method is the main method, which loads the file and sets up the data structures that might be needed for the lexer. \\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -192,14 +196,12 @@ Let $program$ be the start symbol.
   \\
   \mathit{listidentifiers} & \rightarrow & \mathit{declaration} \quad \mathit{,} \quad \mathit{listidentifiers} \quad   \\
   &  |& \mathit{declaration} \quad ; \\
-\\
   \mathit{declaration} & \rightarrow & \mathit{IDENT} \quad \mathit{[} \quad  \mathit{INTCONST} \quad \mathit{]} \quad  \\
   & | & \mathit{IDENT} ;  \\
   %% About function prototypes 
   \mathit{functionprototype} & \rightarrow &  \mathit{functiondeclaration}  \quad \mathit{SEMI} \quad ;\\
-  \mathit{functiondeclaration} & \rightarrow & \mathit{TYPE} \quad \mathit{IDENT} \quad  \mathit{(} \mathit{)} \\
-  & | & \mathit{IDENT} \quad \mathit{(} \quad \mathit{formallistparameters} \quad \mathit{)}  \\ 
-  & | & \mathit{TYPE} \quad \mathit{IDENT} \quad \mathit{(} \quad \mathit{)}\\
+  \mathit{functiondeclaration} & \rightarrow & \mathit{TYPE} \quad \mathit{IDENT} \quad  \mathit{(} \quad\mathit{)} \\
+  & | & \mathit{TYPE}\quad\mathit{IDENT} \quad \mathit{(} \quad \mathit{formallistparameters} \quad \mathit{)}  \\ 
    \mathit{formallistparameters} & \rightarrow & \mathit{formalparamater} \quad \mathit{formallistparameters}  | \\
    & | & \mathit{formalparameter} \\
    \mathit{formalparameter} & \rightarrow & \mathit{TYPE} \quad \mathit{IDENT}  \\
@@ -226,12 +228,14 @@ Let $program$ be the start symbol.
    \mathit{keywords} & \Rightarrow & \mathit{BREAK} \\
    & | & \mathit{CONTINUE};\\
    %%more on specific statements
-   \mathit{ifstatement} & \Rightarrow & \mathit{IF} \mathit{(} \mathit{expression} \mathit{)} \mathit{statementorblock} \quad \mathit{ELSE} \quad \mathit{statementorblock} ;\\
+   \mathit{ifstatement} & \Rightarrow & \mathit{IF} \mathit{(} \mathit{expression} \mathit{)} \mathit{statementorblock} \quad \mathit{elseblock} ;\\
    & | & \mathit{IF} \mathit{(} \mathit{expression} \mathit{)} \quad \mathit{statementorblock} \\
+   \mathit{elseblock} & \Rightarrow & \mathit{ELSE} \quad \mathit{statementorblock} ; \\
    \mathit{statementorblock} & \Rightarrow & \mathit{statement} \\
    &| & \mathit{statementblock};\\
    %% for statement 
-   \mathit{forstatement} & \Rightarrow & \mathit{FOR} \mathit{(} \mathit{optionexpr;optionexpr;optionexpr)}\quad \mathit{statementorblock};\\
+   \mathit{forstatement} & \Rightarrow & \mathit{FOR} \mathit{(} \quad \mathit{insideFor}\quad\mathit{)} \mathit{statementorblock};\\
+   \mathit{insideFor} & \Rightarrow&\mathit{optionexpr}\mathit{SEMI}\mathit{optionexpr}\mathit{SEMI}\mathit{optionexpr};\\
    \mathit{optionexpr} & \Rightarrow & \mathit{expression} \\
    &  | & \mathit{\%empty};\\
    %%while
@@ -263,7 +267,7 @@ Let $program$ be the start symbol.
     & | & \mathit{--}\\
     \mathit{unaryop} & \Rightarrow & \mathit{-} \\
     & | & \mathit{!}\\
-    & | &\mathit{~}\\
+    & | & \mathit{\textasciitilde}\\
     \mathit{binaryop} & \Rightarrow & \mathit{==} \\
     & | & \mathit{!=}\\
     & | & \mathit{<} \\

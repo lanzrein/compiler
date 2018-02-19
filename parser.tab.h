@@ -63,10 +63,10 @@ extern int yydebug;
     LBRACE = 273,
     RBRACE = 274,
     SEMI = 275,
-    QUEST = 276,
-    COLON = 277,
-    COMMA = 278,
-    ASSIGN = 279,
+    COMMA = 276,
+    ASSIGN = 277,
+    QUEST = 278,
+    COLON = 279,
     QUESTCOLON = 280,
     DPIPE = 281,
     DAMP = 282,
@@ -87,12 +87,13 @@ extern int yydebug;
     TILDE = 297,
     DECR = 298,
     INCR = 299,
-    UMINUS = 300,
-    UAMP = 301,
-    LPAR = 302,
-    RPAR = 303,
-    LBRACKET = 304,
-    RBRACKET = 305
+    UAMP = 300,
+    UMINUS = 301,
+    PARTYPE = 302,
+    LPAR = 303,
+    RPAR = 304,
+    LBRACKET = 305,
+    RBRACKET = 306
   };
 #endif
 
