@@ -1,2 +1,4 @@
 examples/
 test/
+parser.tab.*
+parser.output
