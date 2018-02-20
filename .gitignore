@@ -1,4 +1,5 @@
 examples/
-test/
+tests/
+script.sh
 parser.tab.*
 parser.output
