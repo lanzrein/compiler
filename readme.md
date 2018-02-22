@@ -20,15 +20,23 @@
 
 ## Part 2 : Parser
 ### New files 
+
 - lexerfiles : a folder containing the first part of the project, in case we need it at some point. 
 - parser.y : This file is the file that will , with the help of bison, generate the parser code. It contains a grammar for our C language.
+
 ### Modified files 
+
 - Makefile : has been modified to create a parser instead of a lexer 
-- lexer.l : We modify it slightly so it links up with the parser.y file and gives the tokens to the parser. 
+- lexer.l : We modify it slightly so it links up with the parser.y file and gives the tokens to the parser
+. 
+
 ### Building instructions  
+
 - make 
 - ./parser file [debug]
+
 #### Notes  
+
 - The same notes as for part 1 apply : a few warnings, and careful of the directory we use. 
 
 
