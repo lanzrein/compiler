@@ -137,7 +137,7 @@ liststatement 	: statement liststatement
 
 statement 	: SEMI
 			keywords SEMI
-			| RETURN expression SEMI 
+			| RETURN expression SEMI {/*check if correct return type*/}
 			| expression SEMI {/*TODO show th eline in the std output*/}
 			| ifstatement 
 			| forstatement 

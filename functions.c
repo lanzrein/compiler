@@ -1,32 +1,36 @@
 #include "functions.h"
 
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 //TODO CHECK FOR MEMERROR 
-void create_function(function* f,types* args,size_t argc,char* name,int lineDecl){
+void create_function(function* f,enum types* args,size_t argc,char* name,int lineDecl){
 		f = malloc(sizeof(function));
 		if(!f){
-			fprintf(stderr,"Error : no more memory!\n")
+			fprintf(stderr,"Error : no more memory!\n");
 			return;
 		}
 		
-		f->arguments = malloc(sizeof(types)*argc);
+		f->arguments = malloc(sizeof(enum types)*argc);
 		if(!f->arguments){
-			fprintf(stderr,"Error : no more memory!\n")
+			fprintf(stderr,"Error : no more memory!\n");
 			return;
 		}
 		f->argc = argc;
 		f->lineDecl = lineDecl;
-		memcpy(f->arguments,args,sizeof(types)*argc);
+		memcpy(f->arguments,args,sizeof(enum types)*argc);
 		f->name = malloc(strlen(name));
 		if(!f->name){
-			fprintf(stderr,"Error : no more memory!\n")
+			fprintf(stderr,"Error : no more memory!\n");
 			return;
 		}
 		strcpy(f->name,name);
-		return f;
+		return ;
 	
 }
 
-void add_return_type(function* f,types returnType){
+void add_return_type(function* f,enum types returnType){
 	if(f->returnType){
 		fprintf(stderr,"Type checking error : return type already defined !\n");
 		 return;
@@ -70,9 +74,9 @@ int functions_equals(function* f1, function* f2){
 
 
 void init_list(func_list* fl){
-	fl = malloc(sizeof(func_list);
+	fl = malloc(sizeof(func_list));
 	if(!fl){
-		fprintf(stderr,"Error : no more memory!\n")
+		fprintf(stderr,"Error : no more memory!\n");
 		return;
 	}
 	fl->size = 0;
@@ -81,7 +85,7 @@ void init_list(func_list* fl){
 //check if the function already exists 1 if exists. 
 int check_if_exists(func_list* fl,function* f){
 	for(int i = 0; i < fl->size;i++){
-		if(0==functions_equals(fl->functions[i],f)){
+		if(0==functions_equals(&fl->functions[i],f)){
 			return i;
 		}
 	}
@@ -91,53 +95,55 @@ int check_if_exists(func_list* fl,function* f){
 
 void add_function(func_list* fl, function* f){
 	//check if the function has already been declared. 
-	if(check_if_exists(fl,f)){
-		fprintf(stderr,"Type checking error : function %s has already been declared line : %d\n",f->name,fl->functions[i]->lineDecl);
+	int i = check_if_exists(fl,f);
+	if(i){
+		fprintf(stderr,"Type checking error : function %s has already been declared line : %d\n",f->name,fl->functions[i].lineDecl);
 		return;
 	}
 	//create a copy of the function and add it. 
-	function* cpy;
+	function* cpy = malloc(sizeof(function));
+	if(!cpy){
+		fprintf(stderr,"Error : no more memory!\n");
+		return;
+	}
 	copyfunc(cpy,f);
 	
 	//prepare some memory for the new array. 
 	int size = fl->size;
 	function* newArray;
-	newArray = realloc(def_arr->array, (size+1)*sizeof(function));
+	newArray = realloc(fl->functions, (size+1)*sizeof(function));
 	if(!newArray){
-		fprintf(stderr,"Error : no more memory!\n")
+		fprintf(stderr,"Error : no more memory!\n");
 		return;
 	}
 	
 	//successful nbow add it. 
 	newArray[size] = *cpy;
-	fl->array = newArray;
+	fl->functions = newArray;
 	fl->size++;
 	return;
 	
 }
 
 void copyfunc(function* copy,function* orig){
-	if(!orig)
-		return;
-		
-	
-	copy = malloc(sizeof(function));
-	
-	if(!copy){
-		fprintf(stderr,"Error : no more memory!\n")
+	if(!orig || !copy){
 		return;
 	}
-	copy->name = malloc(sizeof(strlen(orig->name));
+		
+	
+	//~ copy = malloc(sizeof(function));
+	
+	copy->name = malloc(sizeof(strlen(orig->name)));
 	strcpy(copy->name,orig->name);
 	copy->returnType = orig->returnType;
 	copy->argc = orig->argc;
-	copy->arguments = malloc(copy->argc*sizeof(types));
+	copy->arguments = malloc(copy->argc*sizeof(enum types));
 	
 	if(!copy->arguments || !copy->name){
-		fprintf(stderr,"Error : no more memory!\n")
+		fprintf(stderr,"Error : no more memory!\n");
 		return;
 	}
-	strcpy(copy->arguments,orig->arguments);
+	memcpy(copy->arguments,orig->arguments,copy->argc*sizeof(enum types));
 	
 	copy->lineDecl = orig->lineDecl;
 	
@@ -148,8 +154,8 @@ void copyfunc(function* copy,function* orig){
 
 void clear_func_list(func_list* fl){
 	for(int i = 0; i < fl->size;i++){
-		free_function(fl->functions[i]);
-		fl->functions[i] = NULL;
+		free_function(&fl->functions[i]);
+		
 	}
 	
 	free(fl);
