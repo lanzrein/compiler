@@ -1,3 +1,8 @@
+%code requires {
+
+	#include "node.h"
+
+}
 
 %{
 	//C declarations..
@@ -20,145 +25,199 @@
 
 	//prototype
 	void yyerror (char const *s);
-	
+
 	
 %}
 
+%union{
+	node n;
+}
 
 
 
 // all remaining tokens....
-%token TYPE
-%token FOR
-%token WHILE
-%token DO
-%token IF
-%left NOTELSE //pseudo token. 
-%left ELSE
-%token BREAK
-%token CONTINUE
-%token RETURN
-%token IDENT
-%token INTCONST
-%token REALCONST
-%token STRCONST
-%token CHARCONST
+%token <n> TYPE
+%token <n> FOR
+%token <n> WHILE
+%token <n> DO
+%token <n> IF
+%left <n> NOTELSE //pseudo token. 
+%left <n> ELSE
+%token <n> BREAK
+%token <n> CONTINUE
+%token <n> RETURN
+%token <n> IDENT
+%token <n> INTCONST
+%token <n> REALCONST
+%token <n> STRCONST
+%token <n> CHARCONST
 
-%token LBRACE RBRACE
-%token SEMI
+%token <n> LBRACE RBRACE
+%token <n> SEMI
 
 
 //we set priority and the associativity left to right or right to left..
-%left COMMA
-%right ASSIGN
-%right QUEST COLON QUESTCOLON //psuedo token for ternary expression (expr ? expr : expr)
-%left DPIPE
-%left DAMP
-%left PIPE
-%left AMP 
-%left EQUALS NEQUAL
-%left GT GE LT LE
-%left PLUS MINUS 
-%left STAR SLASH MOD 
-%right BANG TILDE DECR INCR  UAMP UMINUS PARTYPE //pseudo token for casting ((type) )
-%left LPAR RPAR LBRACKET RBRACKET 
+%left <n> COMMA
+%right <n> ASSIGN
+%right <n> QUEST COLON QUESTCOLON //psuedo token for ternary expression (expr ? expr : expr)
+%left <n> DPIPE
+%left <n> DAMP
+%left <n> PIPE
+%left <n> AMP 
+%left <n> EQUALS NEQUAL
+%left <n> GT GE LT LE
+%left <n> PLUS MINUS 
+%left <n> STAR SLASH MOD 
+%right <n> BANG TILDE DECR INCR  UAMP UMINUS PARTYPE //pseudo token for casting ((type) )
+%left <n> LPAR RPAR LBRACKET RBRACKET 
 
 
 
 
 
+//This are the values that come from lexer..
 
 
-/*
-Operator precedence is determined by the 
-line ordering of the declarations; the higher the line number 
-of the declaration (lower on the page or screen), 
-the higher the precedence. 
-From : https://www.gnu.org/software/bison/manual/html_node/Infix-Calc.html#Infix-Calc */
 
 %start program 
 
 %% 
 //Grammar goes here..
 //The general part 
-program : sentences ; 
-sentences : sentence sentences | sentence	; 
-sentence : variabledeclaration | functionprototype | functiondefinition ; 
+program 	: sentences 
+			; 
+sentences 	: sentence sentences 
+			| sentence	
+			; 
+sentence 	: variabledeclaration 
+			| functionprototype 
+			| functiondefinition 
+			; 
 
 //about variable declaration : THIS IS OK (no conflict)
 variabledeclaration : TYPE listidentifiers SEMI ; 
-listidentifiers : declaration COMMA listidentifiers | declaration ; 
-declaration : IDENT LBRACKET INTCONST RBRACKET | IDENT; 
+listidentifiers : declaration COMMA listidentifiers 
+				| declaration 
+				; 
+declaration : IDENT LBRACKET INTCONST RBRACKET 
+			| IDENT
+			; 
 
 //about function prototypes : THIS IS OK ( no conflict ) 
 functionprototype : functiondeclaration SEMI ; 
-functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR | TYPE IDENT LPAR RPAR;	
-formallistparameters : formalparameter COMMA formallistparameters | formalparameter ; 
-formalparameter : TYPE IDENT | TYPE IDENT LBRACKET RBRACKET ; 
+functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR 
+					| TYPE IDENT LPAR RPAR
+					;	
+formallistparameters 	: formalparameter COMMA formallistparameters 
+						| formalparameter 
+						; 
+formalparameter : TYPE IDENT 
+				| TYPE IDENT LBRACKET RBRACKET 
+				; 
 
 //about function definitions.
-functiondefinition : functiondeclaration LBRACE body RBRACE | functiondeclaration LBRACE RBRACE; 
-body : declorstat body | declorstat ; 
-declorstat : variabledeclaration | statement  | statementblock
-statementblock : LBRACE liststatement RBRACE | LBRACE RBRACE; 
-liststatement : statement liststatement | statement ; 
+functiondefinition 	: functiondeclaration LBRACE body RBRACE 
+					| functiondeclaration LBRACE RBRACE
+					; 
+body 	: declorstat body 
+		| declorstat 
+		; 
+declorstat 	: variabledeclaration 
+			| statement  
+			| statementblock 
+			; 
+statementblock 	: LBRACE liststatement RBRACE 
+				| LBRACE RBRACE
+				; 
+liststatement 	: statement liststatement 
+				| statement 
+				; 
 
 //about statements...
 
-statement : SEMI| keywords SEMI | RETURN expression SEMI | expression SEMI | ifstatement | forstatement | whilestatement | dowhilestatement ; 
-keywords : BREAK | CONTINUE; 
+statement 	: SEMI
+			keywords SEMI
+			| RETURN expression SEMI 
+			| expression SEMI {/*TODO show th eline in the std output*/}
+			| ifstatement 
+			| forstatement 
+			| whilestatement 
+			| dowhilestatement 
+			; 
+keywords	: BREAK 
+			| CONTINUE
+			; 
 //more specifics on statements 
 
-ifstatement : IF LPAR expression RPAR statementorblock ELSE statementorblock | IF LPAR expression RPAR statementorblock %prec NOTELSE;
-statementorblock : statement | statementblock ; 
+ifstatement : IF LPAR expression RPAR statementorblock ELSE statementorblock 
+			| IF LPAR expression RPAR statementorblock %prec NOTELSE
+			;
+statementorblock 	: statement 
+					| statementblock 
+					; 
 
-forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR statementorblock
-optionalexpression : expression  | %empty ;
+forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR statementorblock ; 
+optionalexpression 	: expression  
+					| %empty 
+					;
 whilepart : WHILE LPAR expression RPAR ; 
 whilestatement : whilepart statementorblock ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
 lvalue : IDENT optionbrack  ;
-optionbrack : LBRACKET expression RBRACKET | %empty;	
+optionbrack : LBRACKET expression RBRACKET 
+			| %empty
+			;	
 expression 	: constant
 			| IDENT 
 			| AMP IDENT %prec UAMP 
 			| IDENT LBRACKET expression RBRACKET 
-			| IDENT LPAR  RPAR 
-			| IDENT LPAR expressionlist RPAR  
+			| IDENT LPAR  RPAR {/*check for func ccall*/}
+			| IDENT LPAR expressionlist RPAR  {/*check for func call*/}
 			| lvalue incrdecr
 			| incrdecr lvalue 
-			| lvalue ASSIGN expression 
+			| lvalue ASSIGN expression {/*todo here we need to check for assignment*/}
 			| binaryop 
 			| unaryop 
 			| ternaryexpr
 			| LPAR TYPE RPAR expression %prec PARTYPE
-			| LPAR expression RPAR;			
+			| LPAR expression RPAR
+			;			
 			
 ternaryexpr 		: expression QUEST expression COLON expression 
-expressionlist : expression COMMA expressionlist | expression ; 
-incrdecr	: INCR | DECR ; 
+expressionlist 	: expression COMMA expressionlist 
+				| expression 
+				; 
+incrdecr	: INCR 
+			| DECR 
+			; 
 // careful when using unary minus -> can't do --2 because it will be DECR 2, need to either do - -2 OR -(-2)
 unaryop 	: MINUS expression %prec UMINUS 
 			| BANG expression
-			| TILDE expression; 
+			| TILDE expression
+			; 
 binaryop 	: expression EQUALS expression
 			| expression NEQUAL expression 
-			|expression GE expression
-			|expression GT expression
-			|expression LE expression
-			|expression LT expression
-			|expression PLUS expression
-			|expression MINUS expression 
-			|expression STAR expression 
-			|expression SLASH expression
-			|expression MOD expression
-			|expression PIPE expression
-			|expression AMP expression
-			|expression DPIPE expression
-			|expression DAMP expression;
+			| expression GE expression
+			| expression GT expression
+			| expression LE expression
+			| expression LT expression
+			| expression PLUS expression
+			| expression MINUS expression 
+			| expression STAR expression 
+			| expression SLASH expression
+			| expression MOD expression
+			| expression PIPE expression
+			| expression AMP expression
+			| expression DPIPE expression
+			| expression DAMP expression
+			;
 			
-constant	: INTCONST | REALCONST | STRCONST | CHARCONST;
+constant	: INTCONST	
+			| REALCONST 
+			| STRCONST 
+			| CHARCONST
+			;
 
 
 %%
@@ -176,7 +235,7 @@ int main(int argc, char** argv)
 {
 	//initialize the array of defines. (for the lexer)
 	initArray(&def_array);
-
+	
 	if(argc > 1){
 		//there is a file to open
 		yyin = fopen(argv[1],"r");
@@ -209,5 +268,5 @@ int main(int argc, char** argv)
  *@param s the error message
  */
 void yyerror (char const *s){
-	fprintf(stderr, "Error line %d in file %s while parsing on token :  %s.\n Error :  %s\n",yylineno, currName, yytext, s);
+	fprintf(stderr, "Parsing error : line %d in file %s on token :  %s.\n Error :  %s\n",yylineno, currName, yytext, s);
 }

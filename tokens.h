@@ -17,6 +17,10 @@ typedef struct {
 	char* content;
 }token;
 
+//NA stands for not applicable. 
+ enum types{ NA, INT, FLOAT, CHAR , CHARARR, INTARR, FLOATARR };
+
+
 /**
  * @struct an array that contains the ID of all tokens. 
  * */

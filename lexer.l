@@ -13,7 +13,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "tokens.h"
+//#include "tokens.h"
+
 #include "defines.h"
 #include "parser.tab.h"
 
@@ -144,7 +145,7 @@ ENDIF #endif
 
 {IFDEF}		{if(debug){printf("New ifdef encountered\n");}
 				if(ifdefPtr>=MAX_NESTING){
-					fprintf(stderr, "Error, reached maxed nesting. \n");
+					fprintf(stderr, "Lexer error : reached maxed nesting for if preprocessing\n");
 					exit(1);
 				}
 				//set our if up. 
@@ -155,7 +156,7 @@ ENDIF #endif
 			}
 {IFNDEF}	{if(debug){printf("New ifndef encountered\n");}
 				if(ifdefPtr>=MAX_NESTING){
-					fprintf(stderr, "Error, reached maxed nesting. \n");
+					fprintf(stderr, "Lexer error : reached maxed nesting for if preprocessing. \n");
 					exit(1);
 				}
 				
@@ -203,7 +204,7 @@ ENDIF #endif
 
 				}
 				
-<IFCND>"."		{fprintf(stderr, "Error expected Identifier\n");exit(1);}
+<IFCND>"."		{fprintf(stderr, "Lexer error : expected Identifier\n");exit(1);}
 <IFIGNORE>{IFDEF}	{if(debug){printf("IFDEF encountered while ignoring, Setting flags to -1\n");}
 						ifStack[ifdefPtr++] = -1;
 					}
@@ -230,7 +231,7 @@ ENDIF #endif
 					}
 <IFIGNORE>{ELSEDEF}	{if(debug){printf("Else preprocess. Changing our flags\n");}
 					 if(elseFlag){
-						fprintf(stderr, "Error, more than one else in the file ! Aborting parsing\n");
+						fprintf(stderr, "Lexer error : more than one else in the file ! Aborting parsing\n");
 						return 0;
 					}
 					 elseFlag = 1;
@@ -250,7 +251,7 @@ ENDIF #endif
 
 
 {ENDIF}		{if(readingif == 0){
-				fprintf(stderr,"Error, endif encountered outside of an if. Line : %d, File : %s \n", yylineno, currName);BEGIN(INITIAL);
+				fprintf(stderr,"Lexer error: endif encountered outside of an if. Line : %d, File : %s \n", yylineno, currName);BEGIN(INITIAL);
 				return 0;
 				}else{
 					elseFlag = 0;
@@ -277,7 +278,7 @@ ENDIF #endif
 				}
 			}
 			
-{ELSEDEF}	{if(readingif == 0){fprintf(stderr, "Error else preprocessing outside of if\n");BEGIN(INITIAL);}
+{ELSEDEF}	{if(readingif == 0){fprintf(stderr, "Lexer error : during else preprocessing outside of if\n");BEGIN(INITIAL);}
 				//we need to invert. so if we were reading stop else start
 					if(readingif > 0){
 						//we were reading. 
@@ -293,7 +294,7 @@ ENDIF #endif
 
 						
 <IFCND>[ \t]* {/*ignore*/}			
-<IFCND>.	{fprintf(stderr, "Error expected an identifier for the preprocessing of ifdef.\n");
+<IFCND>.	{fprintf(stderr, "Lexer error :  expected an identifier for the preprocessing of ifdef.\n");
 			 BEGIN(INITIAL);
 			 }
 				
@@ -307,7 +308,7 @@ ENDIF #endif
 					 }
 <LFTEXT>[^\n]	{
 					if(strlen(currentText) > 4096){
-						fprintf(stderr,"Error on %s length of text too big\n",currentText);
+						fprintf(stderr,"Lexer error : on %s length of define text too big\n",currentText);
 						BEGIN(INITIAL);
 					}else{
 						strcat(currentText,yytext);
@@ -380,7 +381,7 @@ ENDIF #endif
 				if(debug){printf("Found matching ident for %s\n", yytext);}
 				//print the out..
 				if(substitutionPointer > MAX_DEFINE_DEPTH){
-					fprintf(stderr, "Error, reached max define depth\n");
+					fprintf(stderr, "Lexer error : reached max define depth\n");
 					BEGIN(INITIAL);
 				}
 				if(substitutionPointer < 0){
@@ -453,7 +454,7 @@ ENDIF #endif
 <<EOF>> 	{
 				if(opencomment){
 				//if we have a comment block not closed properly
-					fprintf(stderr,"Error, open block not closed correctly\n");
+					fprintf(stderr,"Lexer error : comment block not closed correctly\n");
 					exit(1);
 				}
 				if(debug){
@@ -498,7 +499,7 @@ ENDIF #endif
 				}
 			}
 			}
-[^ \t\r\s\n]		{printf("File %s Line %d Unexpected token '%s'\n", currName, yylineno, yytext);	}
+[^ \t\r\s\n]		{printf("Lexer error : File %s Line %d Unexpected token '%s'\n", currName, yylineno, yytext);	}
 
 %%
 
@@ -508,14 +509,14 @@ ENDIF #endif
 void setupInclude(){
 	//check for max depth
 	if(currPtr >= MAX_INCLUDE_DEPTH){
-		fprintf(stderr,"Reached max include depth!");
+		fprintf(stderr,"Lexer error : Reached max include depth!");
 		BEGIN(INITIAL);
 	}
 	if(debug){printf("Starting to include new file %s\n",yytext);}
 		int length = strlen(yytext)-2;
 		//check if valid name..
 		if(length<0){
-			fprintf(stderr,"Length of file name is not long enough.\n");
+			fprintf(stderr,"Lexer error : Length of file name is not long enough.\n");
 			BEGIN(INITIAL);
 		}
 		//take the name and remove the quotes
@@ -527,7 +528,7 @@ void setupInclude(){
 		//check for cycles...
 		for(int idx = 0; idx < currPtr; idx++){
 			if(strcmp(name,buffer_stack[idx].filename)==0){
-				fprintf(stderr,"Include cycle detected ! %s name is in a cycle. Aborting\n",name);
+				fprintf(stderr,"Lexer error : Include cycle detected ! %s name is in a cycle. Aborting\n",name);
 				exit(1);
 			}
 		}
@@ -540,7 +541,7 @@ void setupInclude(){
 							
 		yyin = fopen(name,"r");
 		if(NULL==yyin){
-			fprintf(stderr,"Could not open file : %s will continue to read from current file. \n",name);
+			fprintf(stderr,"Lexer error : Could not open file : %s will continue to read from current file. \n",name);
 			//yy_switch_to_buffer(includes_stack[currPtr]);
 			
 			currPtr--;
