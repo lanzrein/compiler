@@ -1,6 +1,9 @@
 %code requires {
 
 	#include "node.h"
+	#include "functions.h"
+	#include "identifiers.h"
+	#include "tokens.h"
 
 }
 
@@ -31,22 +34,26 @@
 
 %union{
 	node n;
+	function f;
+	identifier id;
+	parameter param;
+	enum types type;
 }
 
 
 
 // all remaining tokens....
-%token <n> TYPE
-%token <n> FOR
-%token <n> WHILE
-%token <n> DO
-%token <n> IF
-%left <n> NOTELSE //pseudo token. 
-%left <n> ELSE
-%token <n> BREAK
-%token <n> CONTINUE
-%token <n> RETURN
-%token <n> IDENT
+%token <type> TYPE
+%token FOR
+%token WHILE
+%token DO
+%token IF
+%left NOTELSE //pseudo token. 
+%left ELSE
+%token BREAK
+%token CONTINUE
+%token RETURN
+%token <id> IDENT
 %token <n> INTCONST
 %token <n> REALCONST
 %token <n> STRCONST
@@ -57,28 +64,45 @@
 
 
 //we set priority and the associativity left to right or right to left..
-%left <n> COMMA
-%right <n> ASSIGN
-%right <n> QUEST COLON QUESTCOLON //psuedo token for ternary expression (expr ? expr : expr)
-%left <n> DPIPE
-%left <n> DAMP
-%left <n> PIPE
-%left <n> AMP 
-%left <n> EQUALS NEQUAL
-%left <n> GT GE LT LE
-%left <n> PLUS MINUS 
-%left <n> STAR SLASH MOD 
-%right <n> BANG TILDE DECR INCR  UAMP UMINUS PARTYPE //pseudo token for casting ((type) )
-%left <n> LPAR RPAR LBRACKET RBRACKET 
+%left COMMA
+%right ASSIGN
+%right QUEST COLON QUESTCOLON //psuedo token for ternary expression (expr ? expr : expr)
+%left DPIPE
+%left DAMP
+%left PIPE
+%left AMP 
+%left EQUALS NEQUAL
+%left GT GE LT LE
+%left PLUS MINUS 
+%left STAR SLASH MOD 
+%right BANG TILDE DECR INCR  UAMP UMINUS PARTYPE //pseudo token for casting ((type) )
+%left LPAR RPAR LBRACKET RBRACKET 
 
 
-
-
+%type <f> functionprototype functiondefinition functiondeclaration
+%type <id> variabledeclaration declaration
+%type <param> formalparameter
 
 //This are the values that come from lexer..
 
 
-
+/**NEEDS : 
+ * Print result of expression at file line etc. 
+ * type mismatch checks
+ * functions calls have correct parameters
+ * return statement have correct type
+ * undeclared variable and functions. 
+ * ---> best effort. 
+ * */
+ /**
+ 1)declaration of variable
+ 2) declaration of functions
+ 3) check for return type of functions
+ 4) check for functions call
+ 5) check for undeclared var/func
+ 6) print res of expression
+ 
+ */
 %start program 
 
 %% 
@@ -95,54 +119,54 @@ sentence 	: variabledeclaration
 			; 
 
 //about variable declaration : THIS IS OK (no conflict)
-variabledeclaration : TYPE listidentifiers SEMI ; 
-listidentifiers : declaration COMMA listidentifiers 
-				| declaration 
+variabledeclaration : TYPE listidentifiers SEMI 	{/*create a list of identifiers of type $1 and add them to typechecking*/} ; 
+listidentifiers : declaration COMMA listidentifiers  {/*add $1 to a list */}
+				| declaration 			{/* add $1 to a list, add the list to list of identifier (l.122) and clear the list */}
 				; 
-declaration : IDENT LBRACKET INTCONST RBRACKET 
-			| IDENT
+declaration : IDENT LBRACKET INTCONST RBRACKET {/*create an ident with a base type FLOAT and then we add 1 if char , 2 if int 3 if float -- makes arr*/}
+			| IDENT	{/*create an ident with no base type*/}
 			; 
 
 //about function prototypes : THIS IS OK ( no conflict ) 
-functionprototype : functiondeclaration SEMI ; 
-functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR 
-					| TYPE IDENT LPAR RPAR
+functionprototype : functiondeclaration SEMI  {/*add the function prototype to list of function of typecheck */} ; 
+functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR {/* create a function with param $4 and store it in funcdecl*/}
+					| TYPE IDENT LPAR RPAR				{/* createa a fucntion with no param store it in functiondeclaration*/}
 					;	
-formallistparameters 	: formalparameter COMMA formallistparameters 
-						| formalparameter 
+formallistparameters 	: formalparameter COMMA formallistparameters {/* add the formal param to a list */}
+						| formalparameter {/* add the formal param to the list above and store it in $$*/}
 						; 
-formalparameter : TYPE IDENT 
-				| TYPE IDENT LBRACKET RBRACKET 
+formalparameter : TYPE IDENT 		{$$ = create_param($1,$2.name);}
+				| TYPE IDENT LBRACKET RBRACKET {$$ = create_param($1+3,$2.name);}
 				; 
 
 //about function definitions.
-functiondefinition 	: functiondeclaration LBRACE body RBRACE 
-					| functiondeclaration LBRACE RBRACE
+functiondefinition 	: functiondeclaration LBRACE body RBRACE {/*tag a flag as the return type of the function declaration. which we check later. */}
+					| functiondeclaration LBRACE RBRACE	{/*should be an error since we want something to be returned. */}
 					; 
-body 	: declorstat body 
-		| declorstat 
+body 	: declorstat body {/*nothing*/}
+		| declorstat {/*nothing*/}
 		; 
-declorstat 	: variabledeclaration 
-			| statement  
-			| statementblock 
+declorstat 	: variabledeclaration {/*nothing */}
+			| statement {/*nothing*/}
+			| statementblock {/*nothing*/}
 			; 
-statementblock 	: LBRACE liststatement RBRACE 
-				| LBRACE RBRACE
+statementblock 	: LBRACE liststatement RBRACE {/*nothing*/}
+				| LBRACE RBRACE {/*nothing*/}
 				; 
-liststatement 	: statement liststatement 
-				| statement 
+liststatement 	: statement liststatement {/*nothing*/}
+				| statement {/*nothing*/}
 				; 
 
 //about statements...
 
 statement 	: SEMI
-			keywords SEMI
+			keywords SEMI {/*nothing*/}
 			| RETURN expression SEMI {/*check if correct return type*/}
 			| expression SEMI {/*TODO show th eline in the std output*/}
-			| ifstatement 
-			| forstatement 
-			| whilestatement 
-			| dowhilestatement 
+			| ifstatement {/*nothing*/}
+			| forstatement {/*nothing*/}
+			| whilestatement {/*nothing*/}
+			| dowhilestatement {/*nothing*/}
 			; 
 keywords	: BREAK 
 			| CONTINUE
@@ -157,36 +181,36 @@ statementorblock 	: statement
 					; 
 
 forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optionalexpression RPAR statementorblock ; 
-optionalexpression 	: expression  
+optionalexpression 	: expression  {/*TODO show th eline in the std output*/}
 					| %empty 
 					;
-whilepart : WHILE LPAR expression RPAR ; 
+whilepart : WHILE LPAR expression RPAR  {/*TODO show th eline in the std output*/};
 whilestatement : whilepart statementorblock ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
 lvalue : IDENT optionbrack  ;
-optionbrack : LBRACKET expression RBRACKET 
+optionbrack : LBRACKET expression RBRACKET {/*TODO show th eline in the std output*/}
 			| %empty
 			;	
-expression 	: constant
-			| IDENT 
-			| AMP IDENT %prec UAMP 
-			| IDENT LBRACKET expression RBRACKET 
+expression 	: constant	{/*set the node $$ as the value of $1*/}
+			| IDENT {/* node $$ as $1 check if ident is declared. */}
+			| AMP IDENT %prec UAMP {/*check if declared, if types >=3, and then its type -3 */}
+			| IDENT LBRACKET expression RBRACKET {/*check if declared, if types >= 3, and $3 is int else error */}
 			| IDENT LPAR  RPAR {/*check for func ccall*/}
 			| IDENT LPAR expressionlist RPAR  {/*check for func call*/}
-			| lvalue incrdecr
-			| incrdecr lvalue 
-			| lvalue ASSIGN expression {/*todo here we need to check for assignment*/}
-			| binaryop 
-			| unaryop 
-			| ternaryexpr
-			| LPAR TYPE RPAR expression %prec PARTYPE
-			| LPAR expression RPAR
+			| lvalue incrdecr {/*something but what ???*/}
+			| incrdecr lvalue {/*something but what ???*/}
+			| lvalue ASSIGN expression {/*todo here we need to check for assignment type match*/}
+			| binaryop {/*will be done at lower level check */ }
+			| unaryop {/*check at lower lvl*/}
+			| ternaryexpr {/*check at lower lvl*/}
+			| LPAR TYPE RPAR expression %prec PARTYPE {/*casting operation */}
+			| LPAR expression RPAR {/*nothing*/}
 			;			
 			
-ternaryexpr 		: expression QUEST expression COLON expression 
-expressionlist 	: expression COMMA expressionlist 
-				| expression 
+ternaryexpr 		: expression QUEST expression COLON expression {/*check that $3 type == $5 type, and then $$ type = $3 type */}
+expressionlist 	: expression COMMA expressionlist {/*add it to the list */}
+				| expression {/*finish the list */}
 				; 
 incrdecr	: INCR 
 			| DECR 
@@ -196,6 +220,7 @@ unaryop 	: MINUS expression %prec UMINUS
 			| BANG expression
 			| TILDE expression
 			; 
+			//FOR ALL BELOW WE NEED $1 type == $2 type 
 binaryop 	: expression EQUALS expression
 			| expression NEQUAL expression 
 			| expression GE expression
@@ -213,10 +238,10 @@ binaryop 	: expression EQUALS expression
 			| expression DAMP expression
 			;
 			
-constant	: INTCONST	
-			| REALCONST 
-			| STRCONST 
-			| CHARCONST
+constant	: INTCONST	{/* type is INT */}
+			| REALCONST {/*type is FLOAT */}
+			| STRCONST {/*type is CHARARR*/}
+			| CHARCONST {/*type is CHAR*/}
 			;
 
 

@@ -45,7 +45,7 @@ int currPtr = 0;
 
 
 //This is for our define parsing. 
-char* identifier; 
+char* identif; 
 char currentText[MAX_DEFINE_LENGTH]; 
 define_array def_array;
 #define MAX_DEFINE_DEPTH MAX_INCLUDE_DEPTH
@@ -301,8 +301,8 @@ ENDIF #endif
 {DEFINE}	{if(debug){printf("new define encoutered\n");}if(def_array.size > MAX_DEFINES){fprintf(stderr,"Error too many defines\n");}else{BEGIN(DEFINECND);}}
 <DEFINECND>[ \t]* /* discard white */
 <DEFINECND>{IDENT} {
-					  identifier = malloc(strlen(yytext)+1);
-					  strcpy(identifier, yytext);
+					  identif = malloc(strlen(yytext)+1);
+					  strcpy(identif, yytext);
 					  //start looking for text. 
 					  BEGIN(LFTEXT);
 					 }
@@ -318,7 +318,7 @@ ENDIF #endif
 
 <LFTEXT>\n		{
 					if(debug){
-						printf("End of define %s \n %s \n",identifier, currentText);
+						printf("End of define %s \n %s \n",identif, currentText);
 					}
 					//create the define
 					define* newDef = malloc(sizeof(define));
@@ -327,7 +327,7 @@ ENDIF #endif
 					
 					
 					
-					allocDefine(newDef,identifier, currentText);
+					allocDefine(newDef,identif, currentText);
 					//add it to the list
 					addNode(&(def_array), newDef);
 					memset(currentText,0,strlen(currentText));

@@ -31,7 +31,13 @@ void setup_typecheck(){
  * */
  
  
- void print_expression(node* n){
+ void print_expression(node* n, char* filename, int lineno){
+	 if(!n || !filename){
+		fprintf("Error : node or filename not defined\n");
+		return;
+	 }
+	 printf("Expression at file %s line %d has type %s\n",filename, lineno,typeTranslation[n->type]};
+	 return;
 	 
 	 
  }

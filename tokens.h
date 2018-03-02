@@ -2,7 +2,7 @@
  * @file tokens.c
  * @brief header file for tokens.c
  * */
- 
+#pragma once 
 
 #define NUM_TOKENS 44 
 
@@ -18,7 +18,9 @@ typedef struct {
 }token;
 
 //NA stands for not applicable. 
+#define TYPECOUNT 7
  enum types{ NA,CHAR, INT, FLOAT , CHARARR, INTARR, FLOATARR };
+ const char* typeTranslation[7];	
 
 
 /**

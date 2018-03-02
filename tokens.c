@@ -33,7 +33,8 @@
  
  
  
- 
+  const char* typeTranslation[7]= { "NA", "char", "int", "float",
+									"char[]","int[]","float[]"};
  
 
 /**

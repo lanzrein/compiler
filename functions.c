@@ -5,21 +5,21 @@
 #include <stdlib.h>
 
 //TODO CHECK FOR MEMERROR 
-void create_function(function* f,enum types* args,size_t argc,char* name,int lineDecl){
+void create_function(function* f,parameter* args,size_t argc,char* name,int lineDecl){
 		f = malloc(sizeof(function));
 		if(!f){
 			fprintf(stderr,"Error : no more memory!\n");
 			return;
 		}
 		
-		f->arguments = malloc(sizeof(enum types)*argc);
+		f->arguments = malloc(sizeof(parameter)*argc);
 		if(!f->arguments){
 			fprintf(stderr,"Error : no more memory!\n");
 			return;
 		}
 		f->argc = argc;
 		f->lineDecl = lineDecl;
-		memcpy(f->arguments,args,sizeof(enum types)*argc);
+		memcpy(f->arguments,args,sizeof(parameter)*argc);
 		f->name = malloc(strlen(name));
 		if(!f->name){
 			fprintf(stderr,"Error : no more memory!\n");
@@ -137,13 +137,13 @@ void copyfunc(function* copy,function* orig){
 	strcpy(copy->name,orig->name);
 	copy->returnType = orig->returnType;
 	copy->argc = orig->argc;
-	copy->arguments = malloc(copy->argc*sizeof(enum types));
+	copy->arguments = malloc(copy->argc*sizeof(parameter));
 	
 	if(!copy->arguments || !copy->name){
 		fprintf(stderr,"Error : no more memory!\n");
 		return;
 	}
-	memcpy(copy->arguments,orig->arguments,copy->argc*sizeof(enum types));
+	memcpy(copy->arguments,orig->arguments,copy->argc*sizeof(parameter));
 	
 	copy->lineDecl = orig->lineDecl;
 	
@@ -158,3 +158,13 @@ void clear_func_list(func_list* fl){
 	free(fl);
 	
 }
+
+
+parameter create_param(enum types type, char* name){
+	parameter p;
+	p.type = type;
+	p.name = malloc(strlen(name));
+	strcpy(p.name,name);
+	return p;
+}
+
