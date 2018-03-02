@@ -18,7 +18,7 @@ typedef struct {
 }token;
 
 //NA stands for not applicable. 
- enum types{ NA, INT, FLOAT, CHAR , CHARARR, INTARR, FLOATARR };
+ enum types{ NA,CHAR, INT, FLOAT , CHARARR, INTARR, FLOATARR };
 
 
 /**

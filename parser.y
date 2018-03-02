@@ -235,6 +235,7 @@ int main(int argc, char** argv)
 {
 	//initialize the array of defines. (for the lexer)
 	initArray(&def_array);
+	//TODO init the lists of functions and identifiers. 
 	
 	if(argc > 1){
 		//there is a file to open
@@ -258,8 +259,10 @@ int main(int argc, char** argv)
 		fclose(yyin);
 	}else{
 		yyparse();	
-		return 0;
+		
 	}
+	//close up everything. 
+	
 }
 
 

@@ -196,6 +196,15 @@ int findIdentifier(define_array* def_arr, char* identifier){
  }
 
  
+ /**
+  * @brief frees all resources belonging to the define array
+  * @param def_arr the array to be freed
+  * */
+  void freeAll(define_array* def_arr){
+	  free(def_arr->array);
+	  free(def_arr);
+	  return;
+  }
  
  
  

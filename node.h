@@ -4,6 +4,7 @@ typedef struct node{
 	struct node* left;
 	struct node* right;
 	enum types type; //type of data if applicable
+	size_t sizeAttribute;
 	void* attribute;
 }node;
 
