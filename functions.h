@@ -2,20 +2,19 @@
 
 //header file for functions. 
 #include "tokens.h"
+#include "identifiers.h"
+
 
 #include <stdio.h>
 //Data structure for Functions. 
 
-typedef struct{
-	char* name;
-	enum types type;
-}parameter;
 
 typedef struct{
 	char* name;
 	size_t argc;
 	int lineDecl;
-	parameter* arguments;
+	char* filename;
+	identifier* arguments;
 	enum types returnType;
 }function;
 
@@ -25,8 +24,9 @@ typedef struct {
 }func_list;
 //TODO doc doc 
 
-void create_function(function* f,parameter* args,size_t argc,char* name,int lineDecl);
+void create_function(function* f,identifier* args,size_t argc,char* name,int lineDecl,char* filenames);
 void add_return_type(function* f,enum types returnType);
+int check_return_type(function* f, enum types given);
 void free_function(function* f);
 int functions_equals(function* f1, function* f2);
 void init_list(func_list* fl);
@@ -35,6 +35,3 @@ void add_function(func_list* fl, function* f);
 void copyfunc(function* copy,function* orig);
 void clear_func_list(func_list* fl);
 
-
-
-parameter create_param(enum types type, char* name);

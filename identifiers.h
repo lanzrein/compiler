@@ -10,6 +10,7 @@ typedef struct {
 	enum types type;
 	char* name; 
 	int lineDecl;
+	char* filename;
 }identifier;
 
 typedef struct{
@@ -17,7 +18,7 @@ typedef struct{
 	identifier* ids;
 }id_list;
 
-void ident_decl(identifier* id, char* name,int lineDecl,enum types type);
+void ident_decl(identifier* id, char* name,int lineDecl,char* filename,enum types type);
 void ident_free(identifier* id);
 int ident_compare(identifier* id1, identifier* id2);
 void init_id_list(id_list* il);

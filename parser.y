@@ -5,6 +5,7 @@
 	#include "identifiers.h"
 	#include "tokens.h"
 
+
 }
 
 %{
@@ -13,8 +14,10 @@
 	#include <string.h>
 	#include <stdlib.h>
 	#include "defines.h"
-	
-	
+	#include "identifiers.h"
+	#include "typechecking.h"
+
+	#include "functions.h"
 	//need these function from flex. 
 	extern int yylex();
 	extern int yyparse();
@@ -28,6 +31,14 @@
 
 	//prototype
 	void yyerror (char const *s);
+	
+	
+	//this is for declarations. 
+	id_list ids;
+
+	//for funciton
+	enum types returnType;
+	
 
 	
 %}
@@ -36,7 +47,6 @@
 	node n;
 	function f;
 	identifier id;
-	parameter param;
 	enum types type;
 }
 
@@ -81,7 +91,8 @@
 
 %type <f> functionprototype functiondefinition functiondeclaration
 %type <id> variabledeclaration declaration
-%type <param> formalparameter
+%type <id> formalparameter
+%type <n> expression
 
 //This are the values that come from lexer..
 
@@ -119,29 +130,47 @@ sentence 	: variabledeclaration
 			; 
 
 //about variable declaration : THIS IS OK (no conflict)
-variabledeclaration : TYPE listidentifiers SEMI 	{/*create a list of identifiers of type $1 and add them to typechecking*/} ; 
-listidentifiers : declaration COMMA listidentifiers  {/*add $1 to a list */}
-				| declaration 			{/* add $1 to a list, add the list to list of identifier (l.122) and clear the list */}
+variabledeclaration : TYPE listidentifiers SEMI 	{/*create a list of identifiers of type $1 and add them to typechecking*/
+														for(int i = 0; i < ids.size;i++){
+															identifier id = ids.ids[i];
+															id.type += $1;//adjust the type. 
+															add_identifier_typechecking(&id);
+														}
+														
+														//clear the ids. 
+														delete_id_list(&ids);
+														
+													} ; 
+listidentifiers : declaration COMMA listidentifiers  {add_id(&ids,&$1);}
+				| declaration 			{add_id(&ids,&$1);}
 				; 
-declaration : IDENT LBRACKET INTCONST RBRACKET {/*create an ident with a base type FLOAT and then we add 1 if char , 2 if int 3 if float -- makes arr*/}
-			| IDENT	{/*create an ident with no base type*/}
+declaration : IDENT LBRACKET INTCONST RBRACKET {ident_decl(&$$,$1.name,$1.lineDecl,currName,FLOAT);/*create an ident with a base type FLOAT and then we add 1 if char , 2 if int 3 if float -- makes arr*/}
+			| IDENT	{ident_decl(&$$,$1.name,$1.lineDecl,currName,0);}/*create an ident with no base type*/
 			; 
 
 //about function prototypes : THIS IS OK ( no conflict ) 
-functionprototype : functiondeclaration SEMI  {/*add the function prototype to list of function of typecheck */} ; 
-functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR {/* create a function with param $4 and store it in funcdecl*/}
-					| TYPE IDENT LPAR RPAR				{/* createa a fucntion with no param store it in functiondeclaration*/}
-					;	
-formallistparameters 	: formalparameter COMMA formallistparameters {/* add the formal param to a list */}
-						| formalparameter {/* add the formal param to the list above and store it in $$*/}
-						; 
-formalparameter : TYPE IDENT 		{$$ = create_param($1,$2.name);}
-				| TYPE IDENT LBRACKET RBRACKET {$$ = create_param($1+3,$2.name);}
+functionprototype : functiondeclaration SEMI  {exit_function(&$1,$1.returnType);add_function_typechecking(&$1);/*add the function prototype to list of function of typecheck */} ; 
+functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR {create_function(&$$,ids.ids,ids.size,$2.name,yylineno,currName);
+																add_return_type(&$$,$1);
+																enter_function(&$$);/* create a function with param $4 and store it in funcdecl*/}
+					| TYPE IDENT LPAR RPAR				{create_function(&$$,NULL,0,$2.name,yylineno,currName);
+														 add_return_type(&$$,$1);
+														 enter_function(&$$);/* createa a fucntion with no param store it in functiondeclaration*/}
+		
+					;
+//we can use ids also here since they will / should not be a case where we mix those two.  
+formallistparameters 	: formalparameter COMMA formallistparameters {add_id(&ids,&$1);/* add the formal param to a list */}
+						| formalparameter {add_id(&ids,&$1);/* add the formal param to the list above and store it in $$*/}
+						;
+//it is of type ident. 
+formalparameter : TYPE IDENT 		{ident_decl(&$$,$2.name,yylineno,currName,$1);}
+				| TYPE IDENT LBRACKET RBRACKET {ident_decl(&$$,$2.name,yylineno,currName,$1+3);}
 				; 
 
 //about function definitions.
-functiondefinition 	: functiondeclaration LBRACE body RBRACE {/*tag a flag as the return type of the function declaration. which we check later. */}
-					| functiondeclaration LBRACE RBRACE	{/*should be an error since we want something to be returned. */}
+functiondefinition 	: functiondeclaration LBRACE body RBRACE {/*at this point we are done with the function. 
+								  we need to check if the return type matches. */exit_function(&$1,returnType);	returnType = NA;	 }
+					| functiondeclaration LBRACE RBRACE	{fprintf(stderr, "Error Type Checking : a function needs to return something\n");/*should be an error since we want something to be returned. */}
 					; 
 body 	: declorstat body {/*nothing*/}
 		| declorstat {/*nothing*/}
@@ -159,10 +188,10 @@ liststatement 	: statement liststatement {/*nothing*/}
 
 //about statements...
 
-statement 	: SEMI
-			keywords SEMI {/*nothing*/}
-			| RETURN expression SEMI {/*check if correct return type*/}
-			| expression SEMI {/*TODO show th eline in the std output*/}
+statement 	: 	SEMI
+			| keywords SEMI {/*nothing*/}
+			| RETURN expression SEMI {returnType = $2.type;/*Maybe unallow further statements ???*/}
+			| expression SEMI {print_expression(&$1,currName,yylineno);}
 			| ifstatement {/*nothing*/}
 			| forstatement {/*nothing*/}
 			| whilestatement {/*nothing*/}
@@ -260,7 +289,8 @@ int main(int argc, char** argv)
 {
 	//initialize the array of defines. (for the lexer)
 	initArray(&def_array);
-	//TODO init the lists of functions and identifiers. 
+
+	init_id_list(&ids);
 	
 	if(argc > 1){
 		//there is a file to open

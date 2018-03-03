@@ -1,31 +1,39 @@
 #include "functions.h"
+#include "identifiers.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 //TODO CHECK FOR MEMERROR 
-void create_function(function* f,parameter* args,size_t argc,char* name,int lineDecl){
+void create_function(function* f,identifier* args,size_t argc,char* name,int lineDecl,char* filename){
 		f = malloc(sizeof(function));
 		if(!f){
 			fprintf(stderr,"Error : no more memory!\n");
 			return;
 		}
 		
-		f->arguments = malloc(sizeof(parameter)*argc);
+		f->arguments = malloc(sizeof(identifier)*argc);
 		if(!f->arguments){
 			fprintf(stderr,"Error : no more memory!\n");
 			return;
 		}
 		f->argc = argc;
 		f->lineDecl = lineDecl;
-		memcpy(f->arguments,args,sizeof(parameter)*argc);
+		memcpy(f->arguments,args,sizeof(identifier)*argc);
 		f->name = malloc(strlen(name));
 		if(!f->name){
 			fprintf(stderr,"Error : no more memory!\n");
 			return;
 		}
+		
 		strcpy(f->name,name);
+		f->filename = malloc(strlen(filename));
+		if(!f->filename){
+			fprintf(stderr,"Error : no more memory!\n");
+			return;
+		}
+		strcpy(f->filename,filename);
 		return ;
 	
 }
@@ -39,6 +47,10 @@ void add_return_type(function* f,enum types returnType){
 	f->returnType = returnType;
 	return;
 	
+}
+
+int check_return_type(function* f, enum types given){
+	return f->returnType == given;
 }
 
 
@@ -137,13 +149,13 @@ void copyfunc(function* copy,function* orig){
 	strcpy(copy->name,orig->name);
 	copy->returnType = orig->returnType;
 	copy->argc = orig->argc;
-	copy->arguments = malloc(copy->argc*sizeof(parameter));
+	copy->arguments = malloc(copy->argc*sizeof(identifier));
 	
 	if(!copy->arguments || !copy->name){
 		fprintf(stderr,"Error : no more memory!\n");
 		return;
 	}
-	memcpy(copy->arguments,orig->arguments,copy->argc*sizeof(parameter));
+	memcpy(copy->arguments,orig->arguments,copy->argc*sizeof(identifier));
 	
 	copy->lineDecl = orig->lineDecl;
 	
@@ -153,6 +165,9 @@ void copyfunc(function* copy,function* orig){
 
 
 void clear_func_list(func_list* fl){
+	for(int i = 0; i < fl->size;i++){
+		free(&fl->functions[i]);
+	}
 	free(fl->functions);
 	
 	free(fl);
@@ -160,11 +175,4 @@ void clear_func_list(func_list* fl){
 }
 
 
-parameter create_param(enum types type, char* name){
-	parameter p;
-	p.type = type;
-	p.name = malloc(strlen(name));
-	strcpy(p.name,name);
-	return p;
-}
 

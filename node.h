@@ -1,3 +1,4 @@
+#pragma once
 #include "tokens.h"
 
 typedef struct node{
