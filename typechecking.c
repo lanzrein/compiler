@@ -20,11 +20,33 @@ int inFunction = 0;
  * */
 void setup_typecheck(){
 	//we need to initialize all of our typechecking variables. 
-	create_node(root);
+	root = malloc(sizeof(node));
+	if(!root){
+		fprintf(stderr,"Error : no memory\n");
+		return;
+	}
+	create_node(root,NA);
+	identifier_global = malloc(sizeof(id_list));
+	if(!identifier_global){
+		fprintf(stderr,"Error : no memory\n");
+		return;
+	}
+	
 	init_id_list(identifier_global);
+	identifier_local = malloc(sizeof(id_list));
+	if(!identifier_local){
+		fprintf(stderr,"Error : no memory\n");
+		return;
+	}
+	init_id_list(identifier_local);
+	function_list = malloc(sizeof(func_list));
+	if(!function_list){
+		fprintf(stderr,"Error : no memory\n");
+		return;
+	}
 	init_list(function_list);
 	
-	
+	return;
 	
 }
 /**
@@ -91,15 +113,7 @@ void exit_function(function* f, enum types returnType){
 	inFunction = 0;
 	return;
 }
-/**NEEDS : 
- * Print result of expression at file line etc. 
- * type mismatch checks
- * functions calls have correct parameters
- * return statement have correct type
- * undeclared variable and functions. 
- * ---> best effort. 
- * */
- 
+
  /**
  * @brief pretty print an expression from the node
  * @param n the node 
@@ -132,7 +146,7 @@ void exit_function(function* f, enum types returnType){
 	 if(left->type != right->type){
 		 return -1;//mismatch
 	 } 
-	  n = malloc(sizeof(node));
+	  //n = malloc(sizeof(node));
 		n->type = CHAR;
 		set_left(n,left);
 		set_right(n,right);
@@ -165,23 +179,28 @@ void exit_function(function* f, enum types returnType){
  * @param right the right hand side
  * @return 0 in success < 0 in mismatch
  * */
- int binary_op(node* n , node* left, node* right){
+ int binary_op(node* n , node* left, node* right,void* operand){
 	 //check if the type matches. 
 	 if(!left || !right){
 		 fprintf(stderr, "Error : either left or right node is not allocated\n");
 		 return -3;
 	 }
 	 
-	 n = malloc(sizeof(node));
 	 if(left->type != right->type){
 		return -1;//return 
 	 }
-	 
+	 if(left->type > FLOAT){
+		 return -2; //illegal type. 
+	 }
+	 n = malloc(sizeof(node));
+
+
 	 n->type = left->type;
 	 
 	 set_left(n,left);
 	 set_right(n,right);
-	 //TODO set attribute ????
+	 //set the attribute
+	 set_attribute(n,operand,sizeof(int));
 	 return 0;
  }
 
@@ -210,6 +229,7 @@ void exit_function(function* f, enum types returnType){
 	 set_left(n,left);
 	 set_right(n,right);
 	 //TODO something else ???
+	 
 	 return 0;
 	 
  }
@@ -281,7 +301,7 @@ int return_type(char* function_name, enum types type){
  * @param type[] an array of expected type. 
  * @return 0 in success, -2 in mismatch, -1 if the function does not exist
  * */ 
- int argument_match(char* function_name, int argc, enum types type[]){
+ int argument_match(char* function_name, int argc, id_list* ids){
 	 int name_matches = 0;
 	 for(int i = 0; i < function_list->size; i++){
 		 function f = function_list->functions[i];
@@ -292,13 +312,13 @@ int return_type(char* function_name, enum types type){
 				//correct argc. 
 				int match = 1; 
 				for(int a = 0; a < argc; a++){
-					if(type[a] != f.arguments[a].type){
+					if(ids->ids[a].type != f.arguments[a].type){
 						//if any argument doesnt match we mark it as non match
 						match=0;
 					}
 				}
 				if(match){
-					return 0;//its  match ! :) 
+					return f.returnType;//its  match ! :) 
 				}
 			}
 			

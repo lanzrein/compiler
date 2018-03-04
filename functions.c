@@ -15,11 +15,10 @@
  * @param lineDecl the line where the funciton is declared
  * @param filename the file name of the funciton
  * */
-void cr
 void create_function(function* f,identifier* args,size_t argc,char* name,int lineDecl,char* filename){
-		f = malloc(sizeof(function));
+		//f = malloc(sizeof(function));
 		if(!f){
-			fprintf(stderr,"Error : no more memory!\n");
+			fprintf(stderr,"Error :function is null!\n");
 			return;
 		}
 		

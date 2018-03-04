@@ -366,7 +366,7 @@ ENDIF #endif
 <COMMENTSINGLE>"\n"	{if(debug){printf("End of comment ! \n");}yylineno++;BEGIN(INITIAL);}
 <COMMENTSINGLE>[^\n]	{/* discard */}
 
-{TYPE} 	{if(debug){prettyprint(currName,yylineno,0,yytext);}return TYPE;}
+{TYPE} 	{if(debug){prettyprint(currName,yylineno,0,yytext);};yylval.type = text_to_type(yytext);return TYPE;}
 {FOR}	{if(debug){prettyprint(currName,yylineno,1,yytext);};return FOR;}
 {WHILE}	{if(debug){prettyprint(currName,yylineno,2,yytext);};return WHILE;}
 {DO}	{if(debug){prettyprint(currName,yylineno,3,yytext);};return DO;}
@@ -403,16 +403,32 @@ ENDIF #endif
 				
 				}else{
 				if(debug){prettyprint(currName,yylineno,9,yytext);}
+				//create an identifier for our identifier. 
+				ident_decl(&yylval.id,yytext,yylineno,currName,NA);
 				return IDENT;
 				}
 			}
 
-{INTCONST} 	{if(debug){prettyprint(currName,yylineno,10,yytext);};return INTCONST;}
-{REALCONST} 	{if(debug){prettyprint(currName,yylineno,11,yytext);};return REALCONST;} // the current text is yytext
-{STRCONST}    { if(debug){processString(currName,yylineno,yytext);};return STRCONST; }				
+{INTCONST} 		{if(debug){prettyprint(currName,yylineno,10,yytext);}
+				create_node(&yylval.n,INT);
+				int val = atoi(yytext);
+				set_attribute(&yylval.n,&val,sizeof(int));
+				return INTCONST;}
+{REALCONST} 	{if(debug){prettyprint(currName,yylineno,11,yytext);}
+				create_node(&yylval.n,FLOAT);
+				float val = atof(yytext);
+				set_attribute(&yylval.n,&val,sizeof(float));					
+					return REALCONST;} // the current text is yytext
+{STRCONST}    { if(debug){processString(currName,yylineno,yytext);}
+				create_node(&yylval.n,CHARARR);
+				set_attribute(&yylval.n,yytext,strlen(yytext));
+				return STRCONST; }				
 			
 			
-{CHARCONST}	{if(debug){processChar(currName,yylineno,yytext);}return CHARCONST;}
+{CHARCONST}	{if(debug){processChar(currName,yylineno,yytext);}
+			create_node(&yylval.n,CHAR);
+			set_attribute(&yylval.n,yytext,1);
+			return CHARCONST;}
 
 {LPAR}		{if(debug){prettyprint(currName,yylineno,14,yytext);};return LPAR;}
 {RPAR}		{if(debug){prettyprint(currName,yylineno,15,yytext);};return RPAR;}
@@ -445,7 +461,7 @@ ENDIF #endif
 {AMP}	{if(debug){prettyprint(currName,yylineno,40,yytext);};return AMP;}
 {BANG}	{if(debug){prettyprint(currName,yylineno,41,yytext);};return BANG;}
 {DPIPE}	{if(debug){prettyprint(currName,yylineno,42,yytext);};return DPIPE;}
-{DAMP}	{if(debug){prettyprint(currName,yylineno,43,yytext);}return DAMP;}
+{DAMP}	{if(debug){prettyprint(currName,yylineno,43,yytext);};return DAMP;}
 
 [ \t]+ /* discard white*/
 \n 	{yylineno++;}

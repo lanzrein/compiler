@@ -6,7 +6,7 @@ LDFLAGS+= -lfl
 all: compile clean
 
 compile: lex.yy.c parser.c tokens.o defines.o node.o functions.o identifiers.o typechecking.o
-	gcc $(CFLAGS) -o parser parser.tab.c lex.yy.c tokens.o defines.o node.o functions.o identifiers.o typechecking.o $(LDFLAGS)
+	gcc $(CFLAGS) -o compile parser.tab.c lex.yy.c tokens.o defines.o node.o functions.o identifiers.o typechecking.o $(LDFLAGS)
 
 parser.c: parser.y node.o
 	bison -v -d parser.y

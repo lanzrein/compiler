@@ -92,7 +92,7 @@
 %type <f> functionprototype functiondefinition functiondeclaration
 %type <id> variabledeclaration declaration
 %type <id> formalparameter
-%type <n> expression
+%type <n> expression constant binaryop unaryop ternaryexpr
 
 //This are the values that come from lexer..
 
@@ -138,11 +138,11 @@ variabledeclaration : TYPE listidentifiers SEMI 	{/*create a list of identifiers
 														}
 														
 														//clear the ids. 
-														delete_id_list(&ids);
-														
+														//delete_id_list(&ids);
+														ids.size = 0;
 													} ; 
-listidentifiers : declaration COMMA listidentifiers  {add_id(&ids,&$1);}
-				| declaration 			{add_id(&ids,&$1);}
+listidentifiers : declaration COMMA listidentifiers  {if(debug){printf("Adding identifier %s to the list\n",$1.name);}add_id(&ids,&$1);}
+				| declaration 			{if(debug){printf("Adding identifier %s to the list\n",$1.name);}add_id(&ids,&$1);}
 				; 
 declaration : IDENT LBRACKET INTCONST RBRACKET {ident_decl(&$$,$1.name,$1.lineDecl,currName,FLOAT);/*create an ident with a base type FLOAT and then we add 1 if char , 2 if int 3 if float -- makes arr*/}
 			| IDENT	{ident_decl(&$$,$1.name,$1.lineDecl,currName,0);}/*create an ident with no base type*/
@@ -213,28 +213,87 @@ forstatement : FOR LPAR optionalexpression SEMI optionalexpression SEMI optional
 optionalexpression 	: expression  {/*TODO show th eline in the std output*/}
 					| %empty 
 					;
-whilepart : WHILE LPAR expression RPAR  {/*TODO show th eline in the std output*/};
+whilepart : WHILE LPAR expression RPAR  {/*nothing*/};
 whilestatement : whilepart statementorblock ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
 lvalue : IDENT optionbrack  ;
-optionbrack : LBRACKET expression RBRACKET {/*TODO show th eline in the std output*/}
+optionbrack : LBRACKET expression RBRACKET {/*nothing */}
 			| %empty
 			;	
-expression 	: constant	{/*set the node $$ as the value of $1*/}
-			| IDENT {/* node $$ as $1 check if ident is declared. */}
-			| AMP IDENT %prec UAMP {/*check if declared, if types >=3, and then its type -3 */}
-			| IDENT LBRACKET expression RBRACKET {/*check if declared, if types >= 3, and $3 is int else error */}
-			| IDENT LPAR  RPAR {/*check for func ccall*/}
-			| IDENT LPAR expressionlist RPAR  {/*check for func call*/}
-			| lvalue incrdecr {/*something but what ???*/}
-			| incrdecr lvalue {/*something but what ???*/}
-			| lvalue ASSIGN expression {/*todo here we need to check for assignment type match*/}
-			| binaryop {/*will be done at lower level check */ }
-			| unaryop {/*check at lower lvl*/}
-			| ternaryexpr {/*check at lower lvl*/}
+expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
+			| IDENT {int err = find_identifier($1.name,$1.type);
+					if(err == 0){
+						create_node(&$$,$1.type);
+						set_attribute(&$$,&$1,sizeof(node));
+					}else if(err == -1){
+						fprintf(stderr, "Error typechecking : undeclared identifier line %d file %s name of identifier %s\n",yylineno,currName, $1.name);
+					}else if(err == -2){
+						fprintf(stderr, "Error typechecking : mismatch of type. Type is %s. line %d file %s name of identifier %s\n",typeTranslation[$1.type],yylineno,currName,$1.name); 
+					}
+					}
+			| AMP IDENT %prec UAMP {int err = find_identifier($2.name,$2.type);
+									if(err==0){
+										$$.type = $2.type-3;
+										set_attribute(&$$,&$2,sizeof(identifier));
+										//no left. 
+									}else if(err == -1){
+										fprintf(stderr, "Error typechecking : undeclared identifier line %d file %s name of identifier %s\n",yylineno,currName, $2.name);
+									}else if(err == -2){
+										fprintf(stderr, "Error typechecking : mismatch of type. Type is %s. line %d file %s name of identifier %s\n",typeTranslation[$2.type],yylineno,currName,$2.name); 
+									}else if(err == -3){
+										fprintf(stderr, "Error typechecking : expected a raw type  got %s line %d file %s identifier %s\n",typeTranslation[$2.type],yylineno,currName,$2.name);
+									}
+									}
+			| IDENT LBRACKET expression RBRACKET {	
+													if($1.type > 3){
+														fprintf(stderr, "Error typechecking : only 1-D arrays are possible file %s line %d identifier %s\n",currName,yylineno,$1.name);
+														return;
+													}
+													int err = find_identifier($3.name,$3.type);
+													if(err == 0){
+														create_node(&$$,$1.type+3);
+														set_attribute(
+													}/*check if declared, if types >= 3, and $3 is int else error */}
+			| IDENT LPAR  RPAR 					{int ret_type = argument_match($1.name,0,0);
+													if(ret_type >= 0){
+														//successful
+														$$.type = ret_type;
+														//todo some more things maybe
+														
+													}else if(ret_type == -1){
+														//no function 
+														fprintf(stderr, "error typechecking: function %s does not exist, line %d in file %s\n",$1.name,yylineno,currName);
+													}else if(ret_type == -2){
+														//mismatch
+														fprintf(stderr, "error typechecking : mismatch in arguments for function %s, call in line %d file %s\n",$1.name,yylineno, currName);
+														
+													}
+												}
+			| IDENT LPAR expressionlist RPAR  	{int ret_type = argument_match($1.name,ids.size,&ids);
+													
+													if(ret_type >= 0){
+														//successful
+														$$.type = ret_type;
+														//todo some more things maybe
+														
+													}else if(ret_type == -1){
+														//no function 
+														fprintf(stderr, "error typechecking: function %s does not exist, line %d in file %s\n",$1.name,yylineno,currName);
+													}else if(ret_type == -2){
+														//mismatch
+														fprintf(stderr, "error typechecking : mismatch in arguments for function %s, call in line %d file %s\n",$1.name,yylineno, currName);
+														
+													}
+												}
+			| lvalue incrdecr	{/*TODO something but what ???*/}
+			| incrdecr lvalue 	{/*something but what ???*/}
+			| lvalue ASSIGN expression {/*TODO here we need to check for assignment type match*/}
+			| binaryop {$$ = $1;/*will be done at lower level check */ }
+			| unaryop {$$ = $1;/*check at lower lvl*/}
+			| ternaryexpr {$$ = $1;/*check at lower lvl*/}
 			| LPAR TYPE RPAR expression %prec PARTYPE {/*casting operation */}
-			| LPAR expression RPAR {/*nothing*/}
+			| LPAR expression RPAR {$$ = $2;/*nothing*/}
 			;			
 			
 ternaryexpr 		: expression QUEST expression COLON expression {/*check that $3 type == $5 type, and then $$ type = $3 type */}
@@ -245,32 +304,167 @@ incrdecr	: INCR
 			| DECR 
 			; 
 // careful when using unary minus -> can't do --2 because it will be DECR 2, need to either do - -2 OR -(-2)
-unaryop 	: MINUS expression %prec UMINUS 
-			| BANG expression
-			| TILDE expression
+unaryop 	: MINUS expression %prec UMINUS {create_node(&$$,NA);
+											 set_right(&$$,&$2);
+											 int val = UMINUS;
+											 set_attribute(&$$,&val,sizeof(int));
+											 }
+			| BANG expression				{//SOME TYPECHECKING NEEDED. 
+											 create_node(&$$,CHAR);
+											 set_right(&$$,&$2);
+											 int val = BANG;
+											 set_attribute(&$$,&val,sizeof(int));
+											 }
+											 
+			| TILDE expression				{create_node(&$$,NA);
+											 set_right(&$$,&$2);
+											 int val = TILDE;
+											 set_attribute(&$$,&val,sizeof(int));
+											 }
 			; 
 			//FOR ALL BELOW WE NEED $1 type == $2 type 
-binaryop 	: expression EQUALS expression
-			| expression NEQUAL expression 
-			| expression GE expression
-			| expression GT expression
-			| expression LE expression
-			| expression LT expression
-			| expression PLUS expression
-			| expression MINUS expression 
-			| expression STAR expression 
-			| expression SLASH expression
-			| expression MOD expression
-			| expression PIPE expression
-			| expression AMP expression
-			| expression DPIPE expression
-			| expression DAMP expression
+binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
+											 int err = to_char_type(&$$,&$1,&$3);
+											 if(err>= 0){
+												int val = EQUALS;
+												set_attribute(&$$,&val,sizeof(int));
+											 }else if(err == -1){
+											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+
+											 }
+												
+											 }
+			| expression NEQUAL expression	{create_node(&$$,NA);
+											 int err = to_char_type(&$$,&$1,&$3);
+											 if(err>= 0){
+												int val = NEQUAL;
+												set_attribute(&$$,&val,sizeof(int));
+											 }else if(err == -1){
+											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+
+											 }
+											 }
+			| expression GE expression		{create_node(&$$,NA);
+											 int err = to_char_type(&$$,&$1,&$3); 
+											 if(err>= 0){
+												int val = GE;
+												set_attribute(&$$,&val,sizeof(int));
+											 }else if(err == -1){
+											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+
+											 }
+											 }
+			| expression GT expression		{create_node(&$$,NA);
+											 int err = to_char_type(&$$,&$1,&$3);
+											 if(err>= 0){
+												int val = GT;
+												set_attribute(&$$,&val,sizeof(int));
+											 }else if(err == -1){
+											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+
+											 }
+											 }
+			| expression LE expression		{create_node(&$$,NA);
+											 int err = to_char_type(&$$,&$1,&$3); 
+											 if(err>= 0){
+												int val = LE;
+												set_attribute(&$$,&val,sizeof(int));
+											 }else if(err == -1){
+											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+
+											 }
+											 }
+			| expression LT expression		{create_node(&$$,NA);
+											 int err = to_char_type(&$$,&$1,&$3);
+											 if(err>= 0){
+												int val = LT;
+												set_attribute(&$$,&val,sizeof(int));
+											 }else if(err == -1){
+											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+
+											 }
+											 }
+			| expression PLUS expression	{create_node(&$$,NA);
+										     int op = PLUS;
+											 int err = binary_op(&$$,&$1,&$3,&op);
+											 if(err == -1){
+											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+											 }
+											 }
+			| expression MINUS expression 	{create_node(&$$,NA);
+										     int op = MINUS;
+											 int err = binary_op(&$$,&$1,&$3,&op);
+											 if(err == -1){
+											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+											 }
+											 }
+			| expression STAR expression 	{create_node(&$$,NA);
+										     int op = STAR;
+											 int err = binary_op(&$$,&$1,&$3,&op);
+											 if(err == -1){
+											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+											 }
+											 }
+			| expression SLASH expression	{create_node(&$$,NA);
+										     int op = SLASH;
+											 int err = binary_op(&$$,&$1,&$3,&op);
+											 if(err == -1){
+											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+											 }
+											 }
+			| expression MOD expression		{create_node(&$$,NA);
+										     int op = MOD;
+											 int err = binary_op(&$$,&$1,&$3,&op);
+											 if(err == -1){
+											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+											 }
+											 }
+			| expression PIPE expression	{create_node(&$$,NA);
+										     int op = PIPE;
+										     if($1.type == FLOAT || $3.type == FLOAT){
+										     
+										     }
+											 int err = binary_op(&$$,&$1,&$3,&op);
+											 if(err == -1){
+											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+											 }
+											 }
+			| expression AMP expression		{create_node(&$$,NA);
+											 set_left(&$$,&$1);
+											 set_right(&$$,&$3);
+											 int val = AMP;
+											 set_attribute(&$$,&val,sizeof(int));
+											 }
+			| expression DPIPE expression	{create_node(&$$,NA);
+											 set_left(&$$,&$1);
+											 set_right(&$$,&$3);
+											 int val = DPIPE;
+											 set_attribute(&$$,&val,sizeof(int));
+											 }
+			| expression DAMP expression	{create_node(&$$,NA);
+											 set_left(&$$,&$1);
+											 set_right(&$$,&$3);
+											 int val = DAMP;
+											 set_attribute(&$$,&val,sizeof(int));
+											 }
 			;
 			
-constant	: INTCONST	{/* type is INT */}
-			| REALCONST {/*type is FLOAT */}
-			| STRCONST {/*type is CHARARR*/}
-			| CHARCONST {/*type is CHAR*/}
+constant	: INTCONST	{$$ = $1;/* type is INT */}
+			| REALCONST {$$ = $1;/*type is FLOAT */}
+			| STRCONST 	{$$ = $1;/*type is CHARARR*/}
+			| CHARCONST {$$ = $1;/*type is CHAR*/}
 			;
 
 
@@ -291,6 +485,7 @@ int main(int argc, char** argv)
 	initArray(&def_array);
 
 	init_id_list(&ids);
+	setup_typecheck();
 	
 	if(argc > 1){
 		//there is a file to open
@@ -317,6 +512,8 @@ int main(int argc, char** argv)
 		
 	}
 	//close up everything. 
+	close_typecheck();
+	
 	
 }
 

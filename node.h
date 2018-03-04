@@ -16,7 +16,7 @@
 typedef struct node{
 	struct node* left;
 	struct node* right;
-	enum types type; //type of data if applicable
+	enum types type; //type of data if applicable NA is used for Operators. 
 	size_t sizeAttribute;
 	void* attribute;
 }node;
@@ -24,7 +24,7 @@ typedef struct node{
  * @brief create and initialize a new node. empty
  * @param n the node 
  * */
-void create_node(node* n);
+void create_node(node* n,enum types type);
 /**
  * @brief sets the left of a node
  * @param n the node

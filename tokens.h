@@ -71,3 +71,10 @@ void createToken(char* id, char* content, token* tok);
  * @param tok the token to free
  * */
 void freeToken(token* tok);
+/**
+ * @brief converts a text to a type
+ * @param text the text to convert
+ * @return return the type of the text 
+ * */
+enum types text_to_type(char* text);
+

@@ -59,7 +59,8 @@ int cast(node* n, node* left, node* right);
  * @param right the right hand side
  * @return 0 in success < 0 in mismatch
  * */
-int binary_op(node* n , node* left, node* right);
+int binary_op(node* n , node* left, node* right,void* operand);
+
 /**
  * @brief an operation where we select from an array
  * @param n the node resulting
@@ -95,9 +96,9 @@ int search_in(id_list* list, char* id_name, enum types expected_type);
  * @param function_name the name of the fucntion
  * @param argc the expected argument count
  * @param type[] an array of expected type. 
- * @return 0 in success, -2 in mismatch, -1 if the function does not exist
+ * @return return type in success, -2 in mismatch, -1 if the function does not exist
  * */
-int argument_match(char* function_name, int argc, enum types type[]);
+int argument_match(char* function_name, int argc, id_list* ids);
 /**
  * @brief close up and free all resources for the typecheck system
  * */

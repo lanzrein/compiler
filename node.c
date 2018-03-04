@@ -13,9 +13,10 @@
  * @brief create and initialize a new node. empty
  * @param n the node 
  * */
-void create_node(node* n){
-	n = malloc(sizeof(node));
+void create_node(node* n,enum types type){
+	//n = malloc(sizeof(node));
 	if(!n){fprintf(stderr,"Error, on memory allocation\n");exit(1);}
+	n->type = type;
 	//TODO maybe do a few other things. 
 	
 }

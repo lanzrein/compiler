@@ -133,3 +133,22 @@ void freeToken(token* tok){
 	return;
 }
 
+/**
+ * @brief converts a text to a type
+ * @param text the text to convert
+ * @return return the type of the text 
+ * */
+enum types text_to_type(char* text){
+	if(0==strcmp(text,"char")){
+		return CHAR;
+	}else if(0==strcmp(text,"int")){
+		return INT;
+	}else if(0==strcmp(text,"float")){
+		return FLOAT;
+	}else{
+		//invalid type
+		return NA;
+	}
+	
+}
+
