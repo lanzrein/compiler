@@ -6,6 +6,16 @@
 #include <stdlib.h>
 
 //TODO CHECK FOR MEMERROR 
+/**
+ * @brief creates a new function and stores it in a pointer
+ * @param f the function created
+ * @param args the arguments of the function
+ * @param argc the argument count 
+ * @param name the name of the function 
+ * @param lineDecl the line where the funciton is declared
+ * @param filename the file name of the funciton
+ * */
+void cr
 void create_function(function* f,identifier* args,size_t argc,char* name,int lineDecl,char* filename){
 		f = malloc(sizeof(function));
 		if(!f){
@@ -37,7 +47,11 @@ void create_function(function* f,identifier* args,size_t argc,char* name,int lin
 		return ;
 	
 }
-
+/**
+ * @brief adds a return type to a function
+ * @param f the function which we add a return type to 
+ * @param returnType the return type to bre added
+ * */
 void add_return_type(function* f,enum types returnType){
 	if(f->returnType){
 		fprintf(stderr,"Type checking error : return type already defined !\n");
@@ -48,12 +62,20 @@ void add_return_type(function* f,enum types returnType){
 	return;
 	
 }
-
+/**
+ * @brief check if the return type is the one expected
+ * @param f the function that is matched
+ * @param given the type expected
+ * @return 1 if the types matches, 0 else 
+ * */
 int check_return_type(function* f, enum types given){
 	return f->returnType == given;
 }
 
-
+/**
+ * @brief free the data of the funciton
+ * @param f the function to free
+ * */
 void free_function(function* f){
 	free(f->arguments);
 	free(f->name);
@@ -62,7 +84,12 @@ void free_function(function* f){
 }
 //TODO modify if we want to have overload ! 
 
-
+/**
+ * @brief compares two function to see if they mare identical
+ * @param f1 the first functiojn
+ * @param f2 the second one
+ * @return 0 if they match,  != 0 else
+ * */
 int functions_equals(function* f1, function* f2){
 	//~ if(!strcmp(f1->name,f2->name) && f1->argc==f2->argc){
 		//~ //name is the same. and same argc ! 
@@ -84,7 +111,10 @@ int functions_equals(function* f1, function* f2){
 	return strcmp(f1->name,f2->name);
 }
 
-
+/**
+ * @brief initializes a list 
+ * @param fl the function list to initialize
+ * */
 void init_list(func_list* fl){
 	fl = malloc(sizeof(func_list));
 	if(!fl){
@@ -94,17 +124,26 @@ void init_list(func_list* fl){
 	fl->size = 0;
 	
 }
-//check if the function already exists 1 if exists. 
-int check_if_exists(func_list* fl,function* f){
+/**
+ * @brief chekcs if a function is in the function list. 
+ * @param fl the function list to search from 
+ * @param f the function to search for
+ * @return the idx of the function in fl if successful. <0 else.
+ * */ 
+ int check_if_exists(func_list* fl,function* f){
 	for(int i = 0; i < fl->size;i++){
 		if(0==functions_equals(&fl->functions[i],f)){
 			return i;
 		}
 	}
 	//no match found. 
-	return 0;
+	return -1;
 }
-
+/**
+ * @brief add a function to the function list
+ * @param fl the list to add it to
+ * @param f the function to add 
+ * */
 void add_function(func_list* fl, function* f){
 	//check if the function has already been declared. 
 	int i = check_if_exists(fl,f);
@@ -136,7 +175,11 @@ void add_function(func_list* fl, function* f){
 	return;
 	
 }
-
+/**
+ * @brief copy a function. 
+ * @param copy the new function 
+ * @param orig the original function 
+ * */
 void copyfunc(function* copy,function* orig){
 	if(!orig || !copy){
 		return;
@@ -162,8 +205,10 @@ void copyfunc(function* copy,function* orig){
 	return;
 	
 }
-
-
+/**
+ * @brief clear all data of the function list
+ * @param fl the function list to clear 
+ * */ 
 void clear_func_list(func_list* fl){
 	for(int i = 0; i < fl->size;i++){
 		free(&fl->functions[i]);

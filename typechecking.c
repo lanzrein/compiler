@@ -9,13 +9,15 @@
 
 //Global variable that are needed 
 //To store functions, identifiers and a tree. 
-
 node* root;
 func_list* function_list;
 id_list* identifier_global;
 id_list* identifier_local;
+//a flag to know if we are in a function or not. 
 int inFunction = 0;
-
+/**
+ * @brief setup the typecheck system. 
+ * */
 void setup_typecheck(){
 	//we need to initialize all of our typechecking variables. 
 	create_node(root);
@@ -25,7 +27,10 @@ void setup_typecheck(){
 	
 	
 }
-
+/**
+ * @brief enter a function and setup the local identifiers 
+ * @param f the fucntion to enter
+ * */
 void enter_function(function* f){
 	//init the list of local identifier. 
 	init_id_list(identifier_local);
@@ -37,7 +42,10 @@ void enter_function(function* f){
 	//mark flag as in inFunction so we add the new identifier to local
 	inFunction = 1;
 }
-
+/**
+ * @brief add an identifier to the list of identifier ( automatically handles the scope ) 
+ * @param id the identifier to be added the list 
+ * */
 void add_identifier_typechecking(identifier* id){
 	if(inFunction){
 		//add to local scope
@@ -48,7 +56,10 @@ void add_identifier_typechecking(identifier* id){
 		
 	}
 }
-
+/**
+ * @brief add a function to the list of function in the typechecking 
+ * @param f the function to add 
+ * */
 void add_function_typechecking(function* f){
 	//simply add the function to func_list
 	if(!f){
@@ -60,7 +71,11 @@ void add_function_typechecking(function* f){
 	return;
 	
 }
-
+/**
+ * @brief exit the function and check if the return type matches
+ * @param f the function to exit
+ * @param returnType the return type we have
+ * */
 void exit_function(function* f, enum types returnType){
 	//check for return type 
 	if(f->returnType != returnType){
@@ -85,7 +100,12 @@ void exit_function(function* f, enum types returnType){
  * ---> best effort. 
  * */
  
- 
+ /**
+ * @brief pretty print an expression from the node
+ * @param n the node 
+ * @param filename the file where the expression is
+ * @param lineno the line no where we found the expression
+ * */
  void print_expression(node* n, char* filename, int lineno){
 	 if(!n || !filename){
 		fprintf(stderr,"Error : node or filename not defined\n");
@@ -96,10 +116,14 @@ void exit_function(function* f, enum types returnType){
 	 
 	 
  }
- /**
-  * @brief for the operation that convert to char (==,!= .....)
-  * ALSO TAKES BANG ???
-  * */
+/**
+ * TODO what bout BANG 
+ * @brief the operation where a node is converted to char 
+ * @param n the node
+ * @param left the left leaf node
+ * @param right the righ tnode
+ * @return 0 if it matches <0 if tehre is a mismatch 
+ * */
  int to_char_type(node* n, node* left,node* right){
 	 if(!left || !right){
 		fprintf(stderr, "Error : either left or right node is not allocated\n");
@@ -115,7 +139,13 @@ void exit_function(function* f, enum types returnType){
 		return 0;
  }
  
- //left is the casting to. 
+ /**
+ * @brief operation where it is casted
+ * @param the new node n
+ * @param left the type where it will be casted to 
+ * @param right the content that is casted 
+ * @return 0 in success < 0 in error. 
+ * */
  int cast(node* n, node* left, node* right){
 	 if(!left || !right){
 		 fprintf(stderr, "Error : either left or right node is not allocated\n");
@@ -128,7 +158,13 @@ void exit_function(function* f, enum types returnType){
 	 set_attribute(n,right->attribute, right->sizeAttribute);
 	 return 0;
  }
- //other binary operations + maybe unary that conserve type. 
+/**
+ * @brief a binary operation is proceeeded
+ * @param n the node containing the operand 
+ * @param left the left hand side
+ * @param right the right hand side
+ * @return 0 in success < 0 in mismatch
+ * */
  int binary_op(node* n , node* left, node* right){
 	 //check if the type matches. 
 	 if(!left || !right){
@@ -150,6 +186,13 @@ void exit_function(function* f, enum types returnType){
  }
 
 	
+/**
+ * @brief an operation where we select from an array
+ * @param n the node resulting
+ * @param left the array from where we select
+ * @param right the idx where we choose from
+ * @return 0 in success <0 else
+ * */
  int brackets_op(node* n, node* left, node* right){
 	 if(!left || !right){
 		 fprintf(stderr, "Error : either left or right node is not allocated\n");
@@ -171,8 +214,13 @@ void exit_function(function* f, enum types returnType){
 	 
  }
 	
-	//return 1 in case of match, -1 in case of mis match. 
- int return_type(char* function_name, enum types type){
+/**
+ * @brief check if the function matches the expected return type 
+ * @param function_name the name of the function
+ * @param type the return type we expect
+ * @return 1 in match, 0 in mismatch , <0 if no such fucntion
+ * */
+int return_type(char* function_name, enum types type){
 	 for(int i = 0; i < function_list->size; i++){
 		 function f = function_list->functions[i];
 		 if(0==strcmp(f.name, function_name)){
@@ -183,7 +231,12 @@ void exit_function(function* f, enum types returnType){
 	 }
 	return -1;//funciton undeclared. 
  }
- //check if the identifier is declared
+ /**
+ * @brief search for the identifier if it exists and if the match types
+ * @param id_name the name of the identifier
+ * @param expected_type the expected_type
+ * @return 0 in success, -1 in not found, -2 if mismatch 
+ * */
  int find_identifier(char* id_name, enum types expected_type){
 		int local = search_in(identifier_local,id_name,expected_type);
 		if(local == 0){
@@ -197,7 +250,13 @@ void exit_function(function* f, enum types returnType){
 		
  }
  
- //check in a list of identifier if it exists and type match. 
+ /**
+ * @brief search in a list of identifier for a ident
+ * @param list the list to search from 
+ * @param id_name the id name
+ * @param expected_type the expected type;
+ * @return 0 in success, -1 in not found, -2 if mismatch 
+ * */
  int search_in(id_list* list, char* id_name, enum types expected_type){
 	 for(int i = 0; i < list->size; i++){
 		 identifier id = list->ids[i];
@@ -215,7 +274,13 @@ void exit_function(function* f, enum types returnType){
 		return -1;
 	 
  }
- //check if function is declared AND if the arg matches. 
+ /**
+ * @brief check if the argument match the expected types
+ * @param function_name the name of the fucntion
+ * @param argc the expected argument count
+ * @param type[] an array of expected type. 
+ * @return 0 in success, -2 in mismatch, -1 if the function does not exist
+ * */ 
  int argument_match(char* function_name, int argc, enum types type[]){
 	 int name_matches = 0;
 	 for(int i = 0; i < function_list->size; i++){
@@ -248,7 +313,9 @@ void exit_function(function* f, enum types returnType){
 	 }
  }
 
-
+/**
+ * @brief close up and free all resources for the typecheck system
+ * */
 void close_typecheck(){
 	delete_tree(root);
 	clear_func_list(function_list);

@@ -19,7 +19,13 @@ typedef struct {
 
 //NA stands for not applicable. 
 #define TYPECOUNT 7
+/**
+ * @enum an enum holding the different type in our C language
+ * */
  enum types{ NA,CHAR, INT, FLOAT , CHARARR, INTARR, FLOATARR };
+ /**
+  * @struct holds the translation in string of the types
+  * */
  const char* typeTranslation[7];	
 
 
