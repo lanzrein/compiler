@@ -39,6 +39,7 @@
 	//for funciton
 	enum types returnType;
 	
+	int empty; //if brackets are empty ornot
 
 	
 %}
@@ -92,8 +93,8 @@
 %type <f> functionprototype functiondefinition functiondeclaration
 %type <id> variabledeclaration declaration
 %type <id> formalparameter
-%type <n> expression constant binaryop unaryop ternaryexpr
-
+%type <n> expression constant binaryop unaryop ternaryexpr lvalue optionbrack
+%type <type> incrdecr
 //This are the values that come from lexer..
 
 
@@ -217,9 +218,26 @@ whilepart : WHILE LPAR expression RPAR  {/*nothing*/};
 whilestatement : whilepart statementorblock ; 
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
-lvalue : IDENT optionbrack  ;
-optionbrack : LBRACKET expression RBRACKET {/*nothing */}
-			| %empty
+lvalue : IDENT optionbrack  {if((!empty) && $1.type < 3){
+								fprintf(stderr, "Error type checking : using array accessing on a primitive type identifier %s , line %d file %s\n",$1.name,yylineno,currName);
+								return 0;
+							}
+								//no mismatch 
+								if(empty){
+										//if we have no brackets. 
+										create_node(&$$,$1.type);
+										
+										set_attribute(&$$,&$1,sizeof(identifier));
+								}else{
+									//we have brackets. 
+									create_node(&$$,$1.type-3);
+									set_right(&$$,&$2);
+									set_attribute(&$$,&$1,sizeof(identifier));
+								}
+							}
+		;
+optionbrack : LBRACKET expression RBRACKET 	{empty = 0; $$ = $2; /*nothing */}
+			| %empty						{empty = 1;}
 			;	
 expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 			| IDENT {int err = find_identifier($1.name,$1.type);
@@ -246,15 +264,23 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 									}
 									}
 			| IDENT LBRACKET expression RBRACKET {	
-													if($1.type > 3){
-														fprintf(stderr, "Error typechecking : only 1-D arrays are possible file %s line %d identifier %s\n",currName,yylineno,$1.name);
-														return;
+													if($1.type < 3){
+														fprintf(stderr, "Error typechecking : expected array for identifier %s got %s line %d file %s \n",$1.name,typeTranslation[$1.type],yylineno,currName);
+														return 0;
 													}
-													int err = find_identifier($3.name,$3.type);
+													int err = find_identifier($1.name,$1.type);
 													if(err == 0){
 														create_node(&$$,$1.type+3);
-														set_attribute(
-													}/*check if declared, if types >= 3, and $3 is int else error */}
+														set_right(&$$,&$3);
+														set_attribute(&$$,&$1,sizeof(identifier));
+													}else if(err == -1){
+														fprintf(stderr, "Error typechecking : identifier %s not declared line %d file %s\n",$1.name,yylineno,currName);
+														
+													}else if(err == -2){
+														fprintf(stderr, "Error typechecking : identifier %s mismatch of type got type %s. %d file %s\n",$1.name,typeTranslation[$1.type],yylineno,currName);
+
+													}
+													}
 			| IDENT LPAR  RPAR 					{int ret_type = argument_match($1.name,0,0);
 													if(ret_type >= 0){
 														//successful
@@ -286,22 +312,75 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 														
 													}
 												}
-			| lvalue incrdecr	{/*TODO something but what ???*/}
-			| incrdecr lvalue 	{/*something but what ???*/}
-			| lvalue ASSIGN expression {/*TODO here we need to check for assignment type match*/}
+			| lvalue incrdecr	{create_node(&$$,$1.type);
+								 set_left(&$$, &$1);
+								 int val = $2;
+								 set_attribute(&$$,&val,sizeof(int));
+								 }
+								
+			| incrdecr lvalue 	{create_node(&$$,$2.type);
+								 set_left(&$$, &$2);
+								 int val = $1;
+								 set_attribute(&$$,&val,sizeof(int));
+								 }
+			| lvalue ASSIGN expression {
+										if($1.type != $3.type){
+											identifier* id = (identifier*)$1.attribute;
+											fprintf(stderr, "Error mismatch in assignment expected %s for identifier %s . File %s line %d\n",typeTranslation[$1.type],id->name,currName,yylineno);
+										}else{
+											//type match. 
+											create_node(&$$,$1.type);
+											set_left(&$$,&$1);
+											set_right(&$$,&$3);
+											int val = ASSIGN;
+											set_attribute(&$$,&val,sizeof(int));
+											
+										
+										}
+										}
 			| binaryop {$$ = $1;/*will be done at lower level check */ }
 			| unaryop {$$ = $1;/*check at lower lvl*/}
 			| ternaryexpr {$$ = $1;/*check at lower lvl*/}
-			| LPAR TYPE RPAR expression %prec PARTYPE {/*casting operation */}
+			| LPAR TYPE RPAR expression %prec PARTYPE 	{create_node(&$$,$2);
+														 set_left(&$$,&$4);
+														}
 			| LPAR expression RPAR {$$ = $2;/*nothing*/}
 			;			
 			
-ternaryexpr 		: expression QUEST expression COLON expression {/*check that $3 type == $5 type, and then $$ type = $3 type */}
+ternaryexpr 		: expression QUEST expression COLON expression {
+																	/*check that $3 type == $5 type, and then $$ type = $3 type */
+																	if($3.type != $5.type){
+																	
+																	}else{
+																	//match okay.
+																	//this one is a bit complicated we need to spawn 2 nodes. and $$ is the parent of those 2 
+																	node * quest = malloc(sizeof(node));
+																	create_node(quest,$1.type);
+																	set_left(quest,&$1);
+																	int val = QUEST;
+																	set_attribute(quest,&val,sizeof(int));
+																	
+																	node * colon = malloc(sizeof(node));
+																	create_node(colon,$3.type);
+																	set_left(colon,&$3);
+																	set_right(colon,&$5);
+																	val = COLON;
+																	set_attribute(colon,&val,sizeof(int));
+																	
+																	//now $$.left = quest, $$.right = colon
+																	set_left(&$$,quest);
+																	set_right(&$$,colon);
+																	val = QUESTCOLON;
+																	set_attribute(&$$,&val,sizeof(int));
+																	
+																	
+																	}
+																	}
 expressionlist 	: expression COMMA expressionlist {/*add it to the list */}
 				| expression {/*finish the list */}
 				; 
-incrdecr	: INCR 
-			| DECR 
+incrdecr	: INCR 	{$$ = INCR;}
+			| DECR 	{$$ = DECR;}
 			; 
 // careful when using unary minus -> can't do --2 because it will be DECR 2, need to either do - -2 OR -(-2)
 unaryop 	: MINUS expression %prec UMINUS {create_node(&$$,NA);
