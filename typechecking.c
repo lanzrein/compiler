@@ -143,8 +143,13 @@ void exit_function(function* f, enum types returnType){
 		fprintf(stderr, "Error : either left or right node is not allocated\n");
 		 return -3;
 	 }
+	 
+	 
 	 if(left->type != right->type){
 		 return -1;//mismatch
+	 }
+	 if(left->type > 3){
+		 return -2;
 	 } 
 	  //n = malloc(sizeof(node));
 		n->type = CHAR;

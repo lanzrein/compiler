@@ -383,22 +383,36 @@ incrdecr	: INCR 	{$$ = INCR;}
 			| DECR 	{$$ = DECR;}
 			; 
 // careful when using unary minus -> can't do --2 because it will be DECR 2, need to either do - -2 OR -(-2)
-unaryop 	: MINUS expression %prec UMINUS {create_node(&$$,NA);
+unaryop 	: MINUS expression %prec UMINUS {
+											 if($2.type > FLOAT){
+												fprintf(stderr, "Error typechecking : illegal type is used (%s). File %s line %d \n", typeTranslation[$2.type],currName,yylineno);
+											 }else{
+											 create_node(&$$,$2.type);
 											 set_right(&$$,&$2);
 											 int val = UMINUS;
 											 set_attribute(&$$,&val,sizeof(int));
 											 }
-			| BANG expression				{//SOME TYPECHECKING NEEDED. 
+											 }
+			| BANG expression				{//SOME TYPECHECKING NEEDED.
+											if($2.type > FLOAT){
+												fprintf(stderr, "Error typechecking : illegal type is used (%s). File %s line %d \n", typeTranslation[$2.type],currName,yylineno);
+											 }else{ 
 											 create_node(&$$,CHAR);
 											 set_right(&$$,&$2);
 											 int val = BANG;
 											 set_attribute(&$$,&val,sizeof(int));
 											 }
+											 }
 											 
-			| TILDE expression				{create_node(&$$,NA);
+			| TILDE expression				{
+											 if($2.type >= FLOAT){
+												fprintf(stderr, "Error typechecking : illegal type is used (%s). File %s line %d \n", typeTranslation[$2.type],currName,yylineno);
+											 }else{
+											 create_node(&$$,$2.type);
 											 set_right(&$$,&$2);
 											 int val = TILDE;
 											 set_attribute(&$$,&val,sizeof(int));
+											 }
 											 }
 			; 
 			//FOR ALL BELOW WE NEED $1 type == $2 type 
@@ -411,6 +425,8 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
 
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 												
 											 }
@@ -423,6 +439,8 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
 
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 											 }
 			| expression GE expression		{create_node(&$$,NA);
@@ -434,6 +452,8 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
 
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 											 }
 			| expression GT expression		{create_node(&$$,NA);
@@ -445,6 +465,8 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
 
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 											 }
 			| expression LE expression		{create_node(&$$,NA);
@@ -456,6 +478,8 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
 
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 											 }
 			| expression LT expression		{create_node(&$$,NA);
@@ -467,6 +491,8 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
 
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 											 }
 			| expression PLUS expression	{create_node(&$$,NA);
@@ -475,6 +501,8 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 											 }
 			| expression MINUS expression 	{create_node(&$$,NA);
@@ -483,6 +511,8 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 											 }
 			| expression STAR expression 	{create_node(&$$,NA);
@@ -491,6 +521,8 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 											 }
 			| expression SLASH expression	{create_node(&$$,NA);
@@ -499,44 +531,71 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
 											 }
 			| expression MOD expression		{create_node(&$$,NA);
 										     int op = MOD;
-											 int err = binary_op(&$$,&$1,&$3,&op);
-											 if(err == -1){
-											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+										     if($1.type == FLOAT || $3.type == FLOAT){
+													fprintf(stderr, "Error typecheking : can't do float operation in this expression. File %s, line %d\n",currName,yylineno);
+										     }else{
+												int err = binary_op(&$$,&$1,&$3,&op);
+												if(err == -1){
+												fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+												}else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+												}
 											 }
 											 }
 			| expression PIPE expression	{create_node(&$$,NA);
 										     int op = PIPE;
 										     if($1.type == FLOAT || $3.type == FLOAT){
-										     
-										     }
+													fprintf(stderr, "Error typecheking : can't do float operation in this expression. File %s, line %d\n",currName,yylineno);
+										     }else{
+												int err = binary_op(&$$,&$1,&$3,&op);
+												if(err == -1){
+												fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+															yylineno,currName);
+												}else if(err == -2){
+														fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+												}
+											 }
+											 }
+			| expression AMP expression		{create_node(&$$,NA);
+										     int op = AMP;
+										     if($1.type == FLOAT || $3.type == FLOAT){
+													fprintf(stderr, "Error typecheking : can't do float operation in this expression. File %s, line %d\n",currName,yylineno);
+										     }else{
+												int err = binary_op(&$$,&$1,&$3,&op);
+												if(err == -1){
+												fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+															yylineno,currName);
+												}else if(err == -2){
+														fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+												}
+											 }
+											 }
+			| expression DPIPE expression	{create_node(&$$,NA);
+										     int op = DPIPE;
 											 int err = binary_op(&$$,&$1,&$3,&op);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
 											 }
-											 }
-			| expression AMP expression		{create_node(&$$,NA);
-											 set_left(&$$,&$1);
-											 set_right(&$$,&$3);
-											 int val = AMP;
-											 set_attribute(&$$,&val,sizeof(int));
-											 }
-			| expression DPIPE expression	{create_node(&$$,NA);
-											 set_left(&$$,&$1);
-											 set_right(&$$,&$3);
-											 int val = DPIPE;
-											 set_attribute(&$$,&val,sizeof(int));
 											 }
 			| expression DAMP expression	{create_node(&$$,NA);
-											 set_left(&$$,&$1);
-											 set_right(&$$,&$3);
-											 int val = DAMP;
-											 set_attribute(&$$,&val,sizeof(int));
+										     int op = DAMP;
+											 int err = binary_op(&$$,&$1,&$3,&op);
+											 if(err == -1){
+											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
+														yylineno,currName);
+											 }else if(err == -2){
+													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+											 }
 											 }
 			;
 			
