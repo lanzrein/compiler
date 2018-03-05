@@ -131,7 +131,6 @@ void exit_function(function* f, enum types returnType){
 	 
  }
 /**
- * TODO what bout BANG 
  * @brief the operation where a node is converted to char 
  * @param n the node
  * @param left the left leaf node
@@ -260,18 +259,15 @@ int return_type(char* function_name, enum types type){
  * @brief search for the identifier if it exists and if the match types
  * @param id_name the name of the identifier
  * @param expected_type the expected_type
- * @return 0 in success, -1 in not found, -2 if mismatch 
+ * @return expected type >= 0, -1 in not found, -2 if mismatch 
  * */
- int find_identifier(char* id_name, enum types expected_type){
-		int local = search_in(identifier_local,id_name,expected_type);
-		if(local == 0){
+ enum types find_identifier(char* id_name){
+		int local = search_in(identifier_local,id_name);
+		if(local >= 0){
 			return local;
-		}else if(local == -2){
-			//mismatch
-			return -2;
 		}
 		
-		return search_in(identifier_global,id_name,expected_type);
+		return search_in(identifier_global,id_name);
 		
  }
  
@@ -280,20 +276,16 @@ int return_type(char* function_name, enum types type){
  * @param list the list to search from 
  * @param id_name the id name
  * @param expected_type the expected type;
- * @return 0 in success, -1 in not found, -2 if mismatch 
+ * @return expected type (>= 0), -1 in not found, -2 if mismatch 
  * */
- int search_in(id_list* list, char* id_name, enum types expected_type){
+ enum types search_in(id_list* list, char* id_name){
 	 for(int i = 0; i < list->size; i++){
 		 identifier id = list->ids[i];
 		 if(0==strcmp(id_name,id.name)){
 			 //name match
-			if(expected_type == id.type){
-				//match 
-				return 0;
-			}else{
-				return -2;//type mismatch
-			}
-		 }
+			return id.type;
+		}
+		 
 		 
 	 }
 		return -1;

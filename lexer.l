@@ -403,6 +403,7 @@ ENDIF #endif
 				
 				}else{
 				if(debug){prettyprint(currName,yylineno,9,yytext);}
+				
 				//create an identifier for our identifier. 
 				ident_decl(&yylval.id,yytext,yylineno,currName,NA);
 				return IDENT;

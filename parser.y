@@ -222,44 +222,57 @@ lvalue : IDENT optionbrack  {if((!empty) && $1.type < 3){
 								fprintf(stderr, "Error type checking : using array accessing on a primitive type identifier %s , line %d file %s\n",$1.name,yylineno,currName);
 								return 0;
 							}
-								//no mismatch 
+							//check if ident is declared !!
+							int expected_type = find_identifier($1.name);
+							if(expected_type >= 0){
+								if((empty == 0 )&& expected_type < 3){
+									fprintf(stderr, "Error typechecking : using array accessor on primitive type. File %s line %d\n",currName,yylineno);
+									return 0;
+								}
 								if(empty){
-										//if we have no brackets. 
-										create_node(&$$,$1.type);
+									//primitive type. 
+									create_node(&$$,expected_type);
 										
-										set_attribute(&$$,&$1,sizeof(identifier));
+									set_attribute(&$$,&$1,sizeof(identifier));
 								}else{
-									//we have brackets. 
-									create_node(&$$,$1.type-3);
+									create_node(&$$,expected_type-3);
 									set_right(&$$,&$2);
 									set_attribute(&$$,&$1,sizeof(identifier));
 								}
+								create_node(&$$,expected_type);
+								set_attribute(&$$,&$1,sizeof(identifier));
+							}else if(expected_type == -1){
+								fprintf(stderr, "Error typechecking : undeclared identifier line %d file %s name of identifier %s\n",yylineno,currName, $1.name);
+							}else if(expected_type == -2){
+								fprintf(stderr, "Error typechecking : mismatch of type. Type is %s. line %d file %s name of identifier %s\n",typeTranslation[$1.type],yylineno,currName,$1.name); 
+							}
+							
 							}
 		;
 optionbrack : LBRACKET expression RBRACKET 	{empty = 0; $$ = $2; /*nothing */}
 			| %empty						{empty = 1;}
 			;	
 expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
-			| IDENT {int err = find_identifier($1.name,$1.type);
-					if(err == 0){
-						create_node(&$$,$1.type);
+			| IDENT {int expected_type = find_identifier($1.name);
+					if(expected_type >= 0){
+						create_node(&$$,expected_type);
 						set_attribute(&$$,&$1,sizeof(node));
-					}else if(err == -1){
+					}else if(expected_type == -1){
 						fprintf(stderr, "Error typechecking : undeclared identifier line %d file %s name of identifier %s\n",yylineno,currName, $1.name);
-					}else if(err == -2){
+					}else if(expected_type == -2){
 						fprintf(stderr, "Error typechecking : mismatch of type. Type is %s. line %d file %s name of identifier %s\n",typeTranslation[$1.type],yylineno,currName,$1.name); 
 					}
 					}
-			| AMP IDENT %prec UAMP {int err = find_identifier($2.name,$2.type);
-									if(err==0){
-										$$.type = $2.type-3;
+			| AMP IDENT %prec UAMP {int expected_type = find_identifier($2.name);
+									if(expected_type==0){
+										$$.type = expected_type-3;
 										set_attribute(&$$,&$2,sizeof(identifier));
 										//no left. 
-									}else if(err == -1){
+									}else if(expected_type == -1){
 										fprintf(stderr, "Error typechecking : undeclared identifier line %d file %s name of identifier %s\n",yylineno,currName, $2.name);
-									}else if(err == -2){
+									}else if(expected_type == -2){
 										fprintf(stderr, "Error typechecking : mismatch of type. Type is %s. line %d file %s name of identifier %s\n",typeTranslation[$2.type],yylineno,currName,$2.name); 
-									}else if(err == -3){
+									}else if(expected_type == -3){
 										fprintf(stderr, "Error typechecking : expected a raw type  got %s line %d file %s identifier %s\n",typeTranslation[$2.type],yylineno,currName,$2.name);
 									}
 									}
@@ -268,15 +281,15 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 														fprintf(stderr, "Error typechecking : expected array for identifier %s got %s line %d file %s \n",$1.name,typeTranslation[$1.type],yylineno,currName);
 														return 0;
 													}
-													int err = find_identifier($1.name,$1.type);
-													if(err == 0){
-														create_node(&$$,$1.type+3);
+													int expected_type = find_identifier($1.name);
+													if(expected_type == 0){
+														create_node(&$$,expected_type+3);
 														set_right(&$$,&$3);
 														set_attribute(&$$,&$1,sizeof(identifier));
-													}else if(err == -1){
+													}else if(expected_type == -1){
 														fprintf(stderr, "Error typechecking : identifier %s not declared line %d file %s\n",$1.name,yylineno,currName);
 														
-													}else if(err == -2){
+													}else if(expected_type == -2){
 														fprintf(stderr, "Error typechecking : identifier %s mismatch of type got type %s. %d file %s\n",$1.name,typeTranslation[$1.type],yylineno,currName);
 
 													}
@@ -326,7 +339,8 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 			| lvalue ASSIGN expression {
 										if($1.type != $3.type){
 											identifier* id = (identifier*)$1.attribute;
-											fprintf(stderr, "Error mismatch in assignment expected %s for identifier %s . File %s line %d\n",typeTranslation[$1.type],id->name,currName,yylineno);
+											
+											fprintf(stderr, "Error mismatch in assignment expected %s(got %s) for identifier %s . File %s line %d\n",typeTranslation[$1.type],typeTranslation[$3.type],id->name,currName,yylineno);
 										}else{
 											//type match. 
 											create_node(&$$,$1.type);

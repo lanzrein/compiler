@@ -30,14 +30,14 @@ void create_function(function* f,identifier* args,size_t argc,char* name,int lin
 		f->argc = argc;
 		f->lineDecl = lineDecl;
 		memcpy(f->arguments,args,sizeof(identifier)*argc);
-		f->name = malloc(strlen(name));
+		f->name = malloc(strlen(name)+1);
 		if(!f->name){
 			fprintf(stderr,"Error : no more memory!\n");
 			return;
 		}
 		
 		strcpy(f->name,name);
-		f->filename = malloc(strlen(filename));
+		f->filename = malloc(strlen(filename)+1);
 		if(!f->filename){
 			fprintf(stderr,"Error : no more memory!\n");
 			return;

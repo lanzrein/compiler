@@ -82,7 +82,7 @@ int return_type(char* function_name, enum types type);
  * @param expected_type the expected_type
  * @return 0 in success, -1 in not found, -2 if mismatch 
  * */
-int find_identifier(char* id_name, enum types expected_type);
+enum types find_identifier(char* id_name);
 /**
  * @brief search in a list of identifier for a ident
  * @param list the list to search from 
@@ -90,7 +90,7 @@ int find_identifier(char* id_name, enum types expected_type);
  * @param expected_type the expected type;
  * @return 0 in success, -1 in not found, -2 if mismatch 
  * */
-int search_in(id_list* list, char* id_name, enum types expected_type);
+enum types search_in(id_list* list, char* id_name);
 /**
  * @brief check if the argument match the expected types
  * @param function_name the name of the fucntion

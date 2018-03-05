@@ -28,13 +28,13 @@ void ident_decl(identifier* id, char* name,int lineDecl,char* filename,enum type
 	}
 	id->lineDecl = lineDecl;
 	id->type = type;
-	id->name = malloc(strlen(name));
+	id->name = malloc(strlen(name)+1);
 	if(!id->name){
 		fprintf(stderr,"Error : no more memory\n");
 		return;
 	}
 	strcpy(id->name,name);
-	id->filename = malloc(strlen(filename));
+	id->filename = malloc(strlen(filename)+1);
 	if(!id->filename){
 		fprintf(stderr, "Error no memory\n");
 		return;
@@ -100,8 +100,8 @@ void add_id(id_list* il, identifier* id){
 	ident_decl(cpy,id->name,id->lineDecl,id->filename,id->type);
 	
 		//prepare some memory for the new array. 
-	identifier* newArray;
-	newArray = realloc(il->ids, (size+1)*sizeof(identifier));
+	identifier* newArray = realloc(il->ids, (size+1)*sizeof(identifier));
+	
 	if(!newArray){
 		fprintf(stderr,"Error : no more memory!\n");
 		return;
@@ -144,10 +144,11 @@ int check_for_identifier(id_list* il, char* name, enum types expectedType){
  * @param il the list to clear
  * */
 void delete_id_list(id_list* il){
-	for(int i = 0; i < il->size;i++){
-		free(&il->ids[i]);
+	if(il == NULL){
+		return;
 	}
-	free(il->ids);
+	
+	//free(il->ids);
 	
 	free(il);
 	return;
