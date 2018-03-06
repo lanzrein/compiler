@@ -98,7 +98,7 @@ enum types search_in(id_list* list, char* id_name);
  * @param type[] an array of expected type. 
  * @return return type in success, -2 in mismatch, -1 if the function does not exist
  * */
-int argument_match(char* function_name, int argc, id_list* ids);
+int argument_match(char* function_name, int argc, enum types exp_types[]);
 /**
  * @brief close up and free all resources for the typecheck system
  * */

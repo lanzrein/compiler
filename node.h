@@ -20,6 +20,8 @@ typedef struct node{
 	size_t sizeAttribute;
 	void* attribute;
 }node;
+
+
 /**
  * @brief create and initialize a new node. empty
  * @param n the node 

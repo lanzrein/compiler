@@ -16,6 +16,7 @@
 	#include "defines.h"
 	#include "identifiers.h"
 	#include "typechecking.h"
+	#define MAX_FUNCTION_ARGS 256
 
 	#include "functions.h"
 	//need these function from flex. 
@@ -42,6 +43,8 @@
 	
 	int empty; //if brackets are empty ornot
 	int error_typecheck;
+	int countList; 
+	node args[MAX_FUNCTION_ARGS];
 
 	
 %}
@@ -221,7 +224,7 @@ optionalexpression 	: expression  {/*TODO show th eline in the std output*/}
 					| %empty 
 					;
 whilepart : WHILE LPAR expression RPAR  {/*nothing*/};
-whilestatement : whilepart statementorblock ; 
+whilestatement : whilepart statementorblock ;
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
 lvalue : IDENT optionbrack  {if((!empty) && $1.type < 3){
@@ -276,8 +279,8 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 					}
 					}
 			| AMP IDENT %prec UAMP {int expected_type = find_identifier($2.name);
-									if(expected_type==0){
-										$$.type = expected_type-3;
+									if(expected_type>=0){
+										$$.type = expected_type+3;
 										set_attribute(&$$,&$2,sizeof(identifier));
 										//no left. 
 									}else if(expected_type == -1){
@@ -329,12 +332,18 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 														
 													}
 												}
-			| IDENT LPAR expressionlist RPAR  	{int ret_type = argument_match($1.name,ids.size,&ids);
-													
+			| IDENT LPAR expressionlist RPAR  	{	enum types exp_type[countList];
+													for(int i = 0 ; i < countList; i++){
+														exp_type[i] = args[i].type;
+													}	
+													int ret_type = argument_match($1.name,countList,exp_type);
+													countList = 0;
+													memset(args,0,sizeof(node)*countList);
 													if(ret_type >= 0){
 														//successful
 														$$.type = ret_type;
-														//todo some more things maybe
+														//TODO later create a node holding info about call + paramters. 
+														
 														
 													}else if(ret_type == -1){
 														//no function 
@@ -347,18 +356,23 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 														
 													}
 												}
-			| lvalue incrdecr	{create_node(&$$,$1.type);
+			| lvalue incrdecr	{if(!error_typecheck){
+								 create_node(&$$,$1.type);
 								 set_left(&$$, &$1);
 								 int val = $2;
 								 set_attribute(&$$,&val,sizeof(int));
 								 }
+								 }
 								
-			| incrdecr lvalue 	{create_node(&$$,$2.type);
+			| incrdecr lvalue 	{if(!error_typecheck){
+								 create_node(&$$,$2.type);
 								 set_left(&$$, &$2);
 								 int val = $1;
 								 set_attribute(&$$,&val,sizeof(int));
 								 }
+								 }
 			| lvalue ASSIGN expression {
+										if(!error_typecheck){
 										if($1.type != $3.type){
 											identifier* id = (identifier*)$1.attribute;
 											
@@ -375,7 +389,8 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 										
 										}
 										}
-			| binaryop {$$ = $1;/*will be done at lower level check */ }
+										}
+			| binaryop {if(!error_typecheck){$$ = $1;} }
 			| unaryop {$$ = $1;/*check at lower lvl*/}
 			| ternaryexpr {$$ = $1;/*check at lower lvl*/}
 			| LPAR TYPE RPAR expression %prec PARTYPE 	{create_node(&$$,$2);
@@ -414,8 +429,22 @@ ternaryexpr 		: expression QUEST expression COLON expression {
 																	
 																	}
 																	}
-expressionlist 	: expression COMMA expressionlist {/*add it to the list */}
-				| expression {/*finish the list */}
+expressionlist 	: expression COMMA expressionlist {
+													/*add it to the node n */
+													//TODO TODO TODO 
+													if(countList >= MAX_FUNCTION_ARGS){
+														fprintf(stderr, "Error : max arguments for a function is 256\n");
+														
+													
+													}else{
+														args[countList] = $1;
+														countList++;
+													}
+													}
+				| expression {/*start the list */
+								args[countList] = $1;
+								countList++;
+							 }
 				; 
 incrdecr	: INCR 	{$$ = INCR;}
 			| DECR 	{$$ = DECR;}

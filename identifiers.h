@@ -22,6 +22,7 @@ typedef struct {
 	int lineDecl;
 	char* filename;
 }identifier;
+
 /**
  * @struct id_list a list of identifier
  * @param size the current size of the list
@@ -31,6 +32,7 @@ typedef struct{
 	size_t size;
 	identifier* ids;
 }id_list;
+
 /**
  * @brief declares a new identifier which is returned as a pointer. 
  * @param id the identifier to be declared

@@ -3,7 +3,7 @@ CC=gcc
 CFLAGS+= -std=c99 -Wall -g
 LDFLAGS+= -lfl
 
-all: compile clean
+all: compile
 
 compile: lex.yy.c parser.c tokens.o defines.o node.o functions.o identifiers.o typechecking.o
 	gcc $(CFLAGS) -o compile parser.tab.c lex.yy.c tokens.o defines.o node.o functions.o identifiers.o typechecking.o $(LDFLAGS)

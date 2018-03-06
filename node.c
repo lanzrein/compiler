@@ -17,6 +17,8 @@ void create_node(node* n,enum types type){
 	//n = malloc(sizeof(node));
 	if(!n){fprintf(stderr,"Error, on memory allocation\n");exit(1);}
 	n->type = type;
+	n->left = malloc(sizeof(node));
+	n->right = malloc(sizeof(node));
 	//TODO maybe do a few other things. 
 	
 }
@@ -26,7 +28,7 @@ void create_node(node* n,enum types type){
  * @param left the left of our node 
  * */
 void set_left(node* n,node* left){
-	n->left = malloc(sizeof(node));
+	//n->left = malloc(sizeof(node));
 	if(!n->left){fprintf(stderr,"Error, on memory allocation\n");exit(1);}
 	memcpy(n->left,left,sizeof(node));
 }
@@ -36,7 +38,7 @@ void set_left(node* n,node* left){
  * @param right the right of our node 
  * */
 void set_right(node* n,node* right){
-	n->right = malloc(sizeof(node));
+	//n->right = malloc(sizeof(node));
 	if(!n->right){fprintf(stderr,"Error, on memory allocation\n");exit(1);}
 	memcpy(n->right,right,sizeof(node));
 }
@@ -67,13 +69,18 @@ void delete_node(node* n){
  * @param root the root of the tree. 
  * */
 void delete_tree(node* root){
-	if(root->left){
+	if(NULL == root){
+		return;
+	}
+	if(NULL != root->left){
 		delete_tree(root->left);
 	}
-	if(root->right){
+	if(NULL != root->right){
 		delete_tree(root->right);
 	}
-	delete_node(root);
+	if(root){
+		delete_node(root);
+	}
 	
 	return;
 	

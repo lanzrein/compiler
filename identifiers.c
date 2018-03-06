@@ -74,7 +74,7 @@ int ident_compare(identifier* id1, identifier* id2){
  * @param il the identifier list to initialize
  * */
 void init_id_list(id_list* il){
-	//il = malloc(sizeof(id_list));
+	il->ids = malloc(sizeof(identifier));
 	il->size = 0;
 	return;
 	

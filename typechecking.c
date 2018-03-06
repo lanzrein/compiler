@@ -33,6 +33,14 @@ void setup_typecheck(){
 	}
 	
 	init_id_list(identifier_global);
+	
+	identifier_local = malloc(sizeof(id_list));
+	if(!identifier_global){
+		fprintf(stderr,"Error : no memory\n");
+		return;
+	}
+	
+	init_id_list(identifier_local);
 
 	function_list = malloc(sizeof(func_list));
 	if(!function_list){
@@ -197,7 +205,7 @@ void exit_function(function* f, enum types returnType){
 	 if(left->type > FLOAT){
 		 return -2; //illegal type. 
 	 }
-	 n = malloc(sizeof(node));
+	 //n = malloc(sizeof(node));
 
 
 	 n->type = left->type;
@@ -299,7 +307,7 @@ int return_type(char* function_name, enum types type){
  * @param type[] an array of expected type. 
  * @return 0 in success, -2 in mismatch, -1 if the function does not exist
  * */ 
- int argument_match(char* function_name, int argc, id_list* ids){
+ int argument_match(char* function_name, int argc, enum types exp_types[]){
 	 int name_matches = 0;
 	 for(int i = 0; i < function_list->size; i++){
 		 function f = function_list->functions[i];
@@ -310,7 +318,7 @@ int return_type(char* function_name, enum types type){
 				//correct argc. 
 				int match = 1; 
 				for(int a = 0; a < argc; a++){
-					if(ids->ids[a].type != f.arguments[a].type){
+					if(exp_types[a] != f.arguments[a].type){
 						//if any argument doesnt match we mark it as non match
 						match=0;
 					}
@@ -337,6 +345,5 @@ int return_type(char* function_name, enum types type){
 void close_typecheck(){
 	delete_tree(root);
 	clear_func_list(function_list);
-	delete_id_list(identifier_local);
 	delete_id_list(identifier_global);
 }

@@ -215,9 +215,7 @@ void copyfunc(function* copy,function* orig){
  * @param fl the function list to clear 
  * */ 
 void clear_func_list(func_list* fl){
-	for(int i = 0; i < fl->size;i++){
-		free(&fl->functions[i]);
-	}
+	
 	free(fl->functions);
 	
 	free(fl);
