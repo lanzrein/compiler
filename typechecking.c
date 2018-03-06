@@ -33,12 +33,7 @@ void setup_typecheck(){
 	}
 	
 	init_id_list(identifier_global);
-	identifier_local = malloc(sizeof(id_list));
-	if(!identifier_local){
-		fprintf(stderr,"Error : no memory\n");
-		return;
-	}
-	init_id_list(identifier_local);
+
 	function_list = malloc(sizeof(func_list));
 	if(!function_list){
 		fprintf(stderr,"Error : no memory\n");
@@ -55,6 +50,12 @@ void setup_typecheck(){
  * */
 void enter_function(function* f){
 	//init the list of local identifier. 
+	identifier_local = malloc(sizeof(id_list));
+
+	if(!identifier_local){
+		fprintf(stderr,"Error : no memory\n");
+		return;
+	}
 	init_id_list(identifier_local);
 	//add all the paramter to the identifier_local
 	for(int i = 0; i < f->argc; i++){

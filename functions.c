@@ -115,12 +115,12 @@ int functions_equals(function* f1, function* f2){
  * @param fl the function list to initialize
  * */
 void init_list(func_list* fl){
-	fl = malloc(sizeof(func_list));
 	if(!fl){
 		fprintf(stderr,"Error : no more memory!\n");
 		return;
 	}
 	fl->size = 0;
+	fl->functions = malloc(sizeof(function));
 	
 }
 /**
@@ -130,6 +130,9 @@ void init_list(func_list* fl){
  * @return the idx of the function in fl if successful. <0 else.
  * */ 
  int check_if_exists(func_list* fl,function* f){
+	 if(!f || !fl){
+		 return -1;
+	 }
 	for(int i = 0; i < fl->size;i++){
 		if(0==functions_equals(&fl->functions[i],f)){
 			return i;
@@ -145,8 +148,11 @@ void init_list(func_list* fl){
  * */
 void add_function(func_list* fl, function* f){
 	//check if the function has already been declared. 
+	if(!fl){
+		return;
+	}
 	int i = check_if_exists(fl,f);
-	if(i){
+	if(i > 0){
 		fprintf(stderr,"Type checking error : function %s has already been declared line : %d\n",f->name,fl->functions[i].lineDecl);
 		return;
 	}

@@ -100,7 +100,8 @@ void add_id(id_list* il, identifier* id){
 	ident_decl(cpy,id->name,id->lineDecl,id->filename,id->type);
 	
 		//prepare some memory for the new array. 
-	identifier* newArray = realloc(il->ids, (size+1)*sizeof(identifier));
+	identifier* newArray;
+	newArray = realloc(il->ids, (size+1)*sizeof(identifier));
 	
 	if(!newArray){
 		fprintf(stderr,"Error : no more memory!\n");
@@ -148,8 +149,9 @@ void delete_id_list(id_list* il){
 		return;
 	}
 	
-	//free(il->ids);
 	
+
+	il->size = 0;
 	free(il);
 	return;
 }

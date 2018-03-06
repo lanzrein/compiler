@@ -35,11 +35,13 @@
 	
 	//this is for declarations. 
 	id_list ids;
+	node expressionlist;
 
 	//for funciton
 	enum types returnType;
 	
 	int empty; //if brackets are empty ornot
+	int error_typecheck;
 
 	
 %}
@@ -139,7 +141,7 @@ variabledeclaration : TYPE listidentifiers SEMI 	{/*create a list of identifiers
 														}
 														
 														//clear the ids. 
-														//delete_id_list(&ids);
+														//free(ids.ids);
 														ids.size = 0;
 													} ; 
 listidentifiers : declaration COMMA listidentifiers  {if(debug){printf("Adding identifier %s to the list\n",$1.name);}add_id(&ids,&$1);}
@@ -149,14 +151,18 @@ declaration : IDENT LBRACKET INTCONST RBRACKET {ident_decl(&$$,$1.name,$1.lineDe
 			| IDENT	{ident_decl(&$$,$1.name,$1.lineDecl,currName,0);}/*create an ident with no base type*/
 			; 
 
-//about function prototypes : THIS IS OK ( no conflict ) 
+//about function prototypes : 
 functionprototype : functiondeclaration SEMI  {exit_function(&$1,$1.returnType);add_function_typechecking(&$1);/*add the function prototype to list of function of typecheck */} ; 
 functiondeclaration : TYPE IDENT LPAR formallistparameters RPAR {create_function(&$$,ids.ids,ids.size,$2.name,yylineno,currName);
 																add_return_type(&$$,$1);
-																enter_function(&$$);/* create a function with param $4 and store it in funcdecl*/}
+																enter_function(&$$);
+																ids.size = 0;/* create a function with param $4 and store it in funcdecl*/
+																}
 					| TYPE IDENT LPAR RPAR				{create_function(&$$,NULL,0,$2.name,yylineno,currName);
 														 add_return_type(&$$,$1);
-														 enter_function(&$$);/* createa a fucntion with no param store it in functiondeclaration*/}
+														 enter_function(&$$);
+														 ids.size = 0;/* createa a fucntion with no param store it in functiondeclaration*/
+														 }
 		
 					;
 //we can use ids also here since they will / should not be a case where we mix those two.  
@@ -169,8 +175,8 @@ formalparameter : TYPE IDENT 		{ident_decl(&$$,$2.name,yylineno,currName,$1);}
 				; 
 
 //about function definitions.
-functiondefinition 	: functiondeclaration LBRACE body RBRACE {/*at this point we are done with the function. 
-								  we need to check if the return type matches. */exit_function(&$1,returnType);	returnType = NA;	 }
+functiondefinition 	: functiondeclaration LBRACE body RBRACE {/*at this point we are done with the function.  we need to check if the return type matches. */
+																exit_function(&$1,returnType);	returnType = NA;	 }
 					| functiondeclaration LBRACE RBRACE	{fprintf(stderr, "Error Type Checking : a function needs to return something\n");/*should be an error since we want something to be returned. */}
 					; 
 body 	: declorstat body {/*nothing*/}
@@ -192,7 +198,7 @@ liststatement 	: statement liststatement {/*nothing*/}
 statement 	: 	SEMI
 			| keywords SEMI {/*nothing*/}
 			| RETURN expression SEMI {returnType = $2.type;/*Maybe unallow further statements ???*/}
-			| expression SEMI {print_expression(&$1,currName,yylineno);}
+			| expression SEMI {if(!error_typecheck){print_expression(&$1,currName,yylineno);}error_typecheck = 0;}
 			| ifstatement {/*nothing*/}
 			| forstatement {/*nothing*/}
 			| whilestatement {/*nothing*/}
@@ -220,6 +226,7 @@ dowhilestatement : DO statementorblock whilepart SEMI ;
 
 lvalue : IDENT optionbrack  {if((!empty) && $1.type < 3){
 								fprintf(stderr, "Error type checking : using array accessing on a primitive type identifier %s , line %d file %s\n",$1.name,yylineno,currName);
+								error_typecheck = 1;
 								return 0;
 							}
 							//check if ident is declared !!
@@ -227,6 +234,7 @@ lvalue : IDENT optionbrack  {if((!empty) && $1.type < 3){
 							if(expected_type >= 0){
 								if((empty == 0 )&& expected_type < 3){
 									fprintf(stderr, "Error typechecking : using array accessor on primitive type. File %s line %d\n",currName,yylineno);
+									error_typecheck = 1;
 									return 0;
 								}
 								if(empty){
@@ -243,8 +251,10 @@ lvalue : IDENT optionbrack  {if((!empty) && $1.type < 3){
 								set_attribute(&$$,&$1,sizeof(identifier));
 							}else if(expected_type == -1){
 								fprintf(stderr, "Error typechecking : undeclared identifier line %d file %s name of identifier %s\n",yylineno,currName, $1.name);
+								error_typecheck = 1;
 							}else if(expected_type == -2){
 								fprintf(stderr, "Error typechecking : mismatch of type. Type is %s. line %d file %s name of identifier %s\n",typeTranslation[$1.type],yylineno,currName,$1.name); 
+								error_typecheck = 1;
 							}
 							
 							}
@@ -259,8 +269,10 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 						set_attribute(&$$,&$1,sizeof(node));
 					}else if(expected_type == -1){
 						fprintf(stderr, "Error typechecking : undeclared identifier line %d file %s name of identifier %s\n",yylineno,currName, $1.name);
+						error_typecheck = 1;
 					}else if(expected_type == -2){
 						fprintf(stderr, "Error typechecking : mismatch of type. Type is %s. line %d file %s name of identifier %s\n",typeTranslation[$1.type],yylineno,currName,$1.name); 
+						error_typecheck = 1;
 					}
 					}
 			| AMP IDENT %prec UAMP {int expected_type = find_identifier($2.name);
@@ -270,15 +282,19 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 										//no left. 
 									}else if(expected_type == -1){
 										fprintf(stderr, "Error typechecking : undeclared identifier line %d file %s name of identifier %s\n",yylineno,currName, $2.name);
+										error_typecheck = 1;
 									}else if(expected_type == -2){
 										fprintf(stderr, "Error typechecking : mismatch of type. Type is %s. line %d file %s name of identifier %s\n",typeTranslation[$2.type],yylineno,currName,$2.name); 
+										error_typecheck = 1;
 									}else if(expected_type == -3){
 										fprintf(stderr, "Error typechecking : expected a raw type  got %s line %d file %s identifier %s\n",typeTranslation[$2.type],yylineno,currName,$2.name);
+										error_typecheck = 1;
 									}
 									}
 			| IDENT LBRACKET expression RBRACKET {	
 													if($1.type < 3){
 														fprintf(stderr, "Error typechecking : expected array for identifier %s got %s line %d file %s \n",$1.name,typeTranslation[$1.type],yylineno,currName);
+														error_typecheck = 1;
 														return 0;
 													}
 													int expected_type = find_identifier($1.name);
@@ -288,9 +304,11 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 														set_attribute(&$$,&$1,sizeof(identifier));
 													}else if(expected_type == -1){
 														fprintf(stderr, "Error typechecking : identifier %s not declared line %d file %s\n",$1.name,yylineno,currName);
+														error_typecheck = 1;
 														
 													}else if(expected_type == -2){
 														fprintf(stderr, "Error typechecking : identifier %s mismatch of type got type %s. %d file %s\n",$1.name,typeTranslation[$1.type],yylineno,currName);
+														error_typecheck = 1;
 
 													}
 													}
@@ -303,9 +321,11 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 													}else if(ret_type == -1){
 														//no function 
 														fprintf(stderr, "error typechecking: function %s does not exist, line %d in file %s\n",$1.name,yylineno,currName);
+														error_typecheck = 1;
 													}else if(ret_type == -2){
 														//mismatch
 														fprintf(stderr, "error typechecking : mismatch in arguments for function %s, call in line %d file %s\n",$1.name,yylineno, currName);
+														error_typecheck = 1;
 														
 													}
 												}
@@ -319,9 +339,11 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 													}else if(ret_type == -1){
 														//no function 
 														fprintf(stderr, "error typechecking: function %s does not exist, line %d in file %s\n",$1.name,yylineno,currName);
+														error_typecheck = 1;
 													}else if(ret_type == -2){
 														//mismatch
 														fprintf(stderr, "error typechecking : mismatch in arguments for function %s, call in line %d file %s\n",$1.name,yylineno, currName);
+														error_typecheck = 1;
 														
 													}
 												}
@@ -341,6 +363,7 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 											identifier* id = (identifier*)$1.attribute;
 											
 											fprintf(stderr, "Error mismatch in assignment expected %s(got %s) for identifier %s . File %s line %d\n",typeTranslation[$1.type],typeTranslation[$3.type],id->name,currName,yylineno);
+											error_typecheck = 1;
 										}else{
 											//type match. 
 											create_node(&$$,$1.type);
@@ -364,9 +387,10 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 ternaryexpr 		: expression QUEST expression COLON expression {
 																	/*check that $3 type == $5 type, and then $$ type = $3 type */
 																	if($3.type != $5.type){
-																	
+																		fprintf(stderr, "Error typechecking : mismatch on types. File %s, line %d\n", currName, yylineno);
+																		error_typecheck = 1;
 																	}else{
-																	//match okay.
+																	//match okay
 																	//this one is a bit complicated we need to spawn 2 nodes. and $$ is the parent of those 2 
 																	node * quest = malloc(sizeof(node));
 																	create_node(quest,$1.type);
@@ -400,6 +424,7 @@ incrdecr	: INCR 	{$$ = INCR;}
 unaryop 	: MINUS expression %prec UMINUS {
 											 if($2.type > FLOAT){
 												fprintf(stderr, "Error typechecking : illegal type is used (%s). File %s line %d \n", typeTranslation[$2.type],currName,yylineno);
+												error_typecheck = 1;
 											 }else{
 											 create_node(&$$,$2.type);
 											 set_right(&$$,&$2);
@@ -410,6 +435,7 @@ unaryop 	: MINUS expression %prec UMINUS {
 			| BANG expression				{//SOME TYPECHECKING NEEDED.
 											if($2.type > FLOAT){
 												fprintf(stderr, "Error typechecking : illegal type is used (%s). File %s line %d \n", typeTranslation[$2.type],currName,yylineno);
+												error_typecheck = 1;
 											 }else{ 
 											 create_node(&$$,CHAR);
 											 set_right(&$$,&$2);
@@ -421,6 +447,7 @@ unaryop 	: MINUS expression %prec UMINUS {
 			| TILDE expression				{
 											 if($2.type >= FLOAT){
 												fprintf(stderr, "Error typechecking : illegal type is used (%s). File %s line %d \n", typeTranslation[$2.type],currName,yylineno);
+												error_typecheck = 1;
 											 }else{
 											 create_node(&$$,$2.type);
 											 set_right(&$$,&$2);
@@ -438,9 +465,11 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 }else if(err == -1){
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 												
 											 }
@@ -452,9 +481,11 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 }else if(err == -1){
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression GE expression		{create_node(&$$,NA);
@@ -465,9 +496,11 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 }else if(err == -1){
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression GT expression		{create_node(&$$,NA);
@@ -478,9 +511,11 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 }else if(err == -1){
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression LE expression		{create_node(&$$,NA);
@@ -491,9 +526,11 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 }else if(err == -1){
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression LT expression		{create_node(&$$,NA);
@@ -504,9 +541,11 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 }else if(err == -1){
 											 		 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression PLUS expression	{create_node(&$$,NA);
@@ -515,8 +554,10 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression MINUS expression 	{create_node(&$$,NA);
@@ -525,8 +566,10 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression STAR expression 	{create_node(&$$,NA);
@@ -535,8 +578,10 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression SLASH expression	{create_node(&$$,NA);
@@ -545,21 +590,26 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression MOD expression		{create_node(&$$,NA);
 										     int op = MOD;
 										     if($1.type == FLOAT || $3.type == FLOAT){
 													fprintf(stderr, "Error typecheking : can't do float operation in this expression. File %s, line %d\n",currName,yylineno);
+													error_typecheck = 1;
 										     }else{
 												int err = binary_op(&$$,&$1,&$3,&op);
 												if(err == -1){
 												fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 												}else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 												}
 											 }
 											 }
@@ -581,13 +631,16 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 										     int op = AMP;
 										     if($1.type == FLOAT || $3.type == FLOAT){
 													fprintf(stderr, "Error typecheking : can't do float operation in this expression. File %s, line %d\n",currName,yylineno);
+													error_typecheck = 1;
 										     }else{
 												int err = binary_op(&$$,&$1,&$3,&op);
 												if(err == -1){
 												fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 															yylineno,currName);
+															error_typecheck = 1;
 												}else if(err == -2){
 														fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+														error_typecheck = 1;
 												}
 											 }
 											 }
@@ -597,8 +650,10 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			| expression DAMP expression	{create_node(&$$,NA);
@@ -607,8 +662,10 @@ binaryop 	: expression EQUALS expression	{create_node(&$$,NA);
 											 if(err == -1){
 											 fprintf(stderr,"Error typechecking : line %d in file %s left and right hand side have non matching type ! \n",
 														yylineno,currName);
+														error_typecheck = 1;
 											 }else if(err == -2){
 													fprintf(stderr, "Error typechceking : expected raw type got type : %s. File %s line %d\n",typeTranslation[$1.type],currName,yylineno);
+													error_typecheck = 1;
 											 }
 											 }
 			;
@@ -636,7 +693,7 @@ int main(int argc, char** argv)
 	//initialize the array of defines. (for the lexer)
 	initArray(&def_array);
 
-	init_id_list(&ids);
+	ids.size = 0;
 	setup_typecheck();
 	
 	if(argc > 1){
