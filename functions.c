@@ -81,7 +81,6 @@ void free_function(function* f){
 	free(f);
 	return;
 }
-//TODO modify if we want to have overload ! 
 
 /**
  * @brief compares two function to see if they mare identical
@@ -90,24 +89,26 @@ void free_function(function* f){
  * @return 0 if they match,  != 0 else
  * */
 int functions_equals(function* f1, function* f2){
-	//~ if(!strcmp(f1->name,f2->name) && f1->argc==f2->argc){
-		//~ //name is the same. and same argc ! 
-		//~ if(f1->returnType == f2->returnType){
-			//~ //same return type!
-			//~ //need to check if they are the same arg types. 
-			//~ for(int i = 0; i < f1->argc; i++){
-				//~ if(f1->arguments[i] != f2->arguments[i]){
-					//~ //if any argument is different. 
-					//~ //TODO change to match widening arguments.  
-					//~ return 1;
-				//~ }
-			//~ }
-		//~ }
+	if(!strcmp(f1->name,f2->name) && f1->argc==f2->argc){
+		//name is the same. and same argc ! 
+		if(f1->returnType == f2->returnType){
+			//same return type!
+			//need to check if they are the same arg types.
+			for(int i = 0; i < f1->argc; i++){
+				if(f1->arguments[i].type != f2->arguments[i].type){
+					//if any argument is different type 
+					//TODO change to match widening arguments.  
+					return 1;
+				}
+			}
+			//we havent returned anything so they match 
+			return 0;
+		}
 		
-	//~ }
-	//~ //not the same. 
-	//~ return 1;
-	return strcmp(f1->name,f2->name);
+	}
+	
+	//not the same. 
+	return 1;
 }
 
 /**

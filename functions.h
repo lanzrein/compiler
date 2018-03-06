@@ -83,7 +83,7 @@ void init_list(func_list* fl);
  * */ 
 int check_if_exists(func_list* fl,function* f);
 /**
- * @brief add a function to the function list
+ * @brief tries to add a function to the function list
  * @param fl the list to add it to
  * @param f the function to add 
  * */

@@ -88,7 +88,7 @@ void add_identifier_typechecking(identifier* id){
 	}
 }
 /**
- * @brief add a function to the list of function in the typechecking 
+ * @brief add a function to the list of function in the typechecking if the function is not already in the list. 
  * @param f the function to add 
  * */
 void add_function_typechecking(function* f){
@@ -109,10 +109,11 @@ void add_function_typechecking(function* f){
  * */
 void exit_function(function* f, enum types returnType){
 	//check for return type 
+	
 	if(f->returnType != returnType){
 		
 		//TODO error.
-		fprintf(stderr, "Error typechecking got type %s expected type %s (func %s declared l. %d\n",
+		fprintf(stderr, "Error typechecking got type %s expected type %s (func %s declared line %d )\n",
 						typeTranslation[returnType],typeTranslation[f->returnType],f->name,f->lineDecl);
 		return ;
 	}
@@ -258,7 +259,6 @@ int return_type(char* function_name, enum types type){
 		 function f = function_list->functions[i];
 		 if(0==strcmp(f.name, function_name)){
 			 //name match. 
-			 //TODO ASK TEACHER: 
 			 return type == f.returnType;//0 if match != 0 else. 
 		 }
 	 }

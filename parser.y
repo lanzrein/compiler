@@ -178,8 +178,15 @@ formalparameter : TYPE IDENT 		{ident_decl(&$$,$2.name,yylineno,currName,$1);}
 				; 
 
 //about function definitions.
-functiondefinition 	: functiondeclaration LBRACE body RBRACE {/*at this point we are done with the function.  we need to check if the return type matches. */
-																exit_function(&$1,returnType);	returnType = NA;	 }
+functiondefinition 	: functiondeclaration LBRACE body RBRACE {
+															if(returnType == NA){
+																//no return type has been defined ! 
+																fprintf(stderr, "Error typechecking : function call does not return anything ( File %s line. %d\n",currName, yylineno);
+																fprintf(stderr, "\t function name : %s , declared line %d in %s\n",$1.name,$1.lineDecl,$1.filename);
+																returnType = $1.returnType;
+															}/*at this point we are done with the function.  we need to check if the return type matches. */
+																exit_function(&$1,returnType);	if(return_type($1.name,returnType) < 0 ){add_function_typechecking(&$1);} returnType = NA;	 
+															}
 					| functiondeclaration LBRACE RBRACE	{fprintf(stderr, "Error Type Checking : a function needs to return something\n");/*should be an error since we want something to be returned. */}
 					; 
 body 	: declorstat body {/*nothing*/}
@@ -227,19 +234,22 @@ whilepart : WHILE LPAR expression RPAR  {/*nothing*/};
 whilestatement : whilepart statementorblock ;
 dowhilestatement : DO statementorblock whilepart SEMI ; 
 
-lvalue : IDENT optionbrack  {if((!empty) && $1.type < 3){
-								fprintf(stderr, "Error type checking : using array accessing on a primitive type identifier %s , line %d file %s\n",$1.name,yylineno,currName);
-								error_typecheck = 1;
-								return 0;
-							}
-							//check if ident is declared !!
+lvalue : IDENT optionbrack  {							
 							int expected_type = find_identifier($1.name);
+
+							if((!empty) && expected_type < 3){
+								fprintf(stderr, "Error type checking : using array accessing on a primitive type identifier %s (type %s), line %d file %s\n",$1.name,typeTranslation[expected_type],yylineno,currName);
+								error_typecheck = 1;
+								empty = 1;
+								
+							}else{
+							//check if ident is declared !!
 							if(expected_type >= 0){
 								if((empty == 0 )&& expected_type < 3){
 									fprintf(stderr, "Error typechecking : using array accessor on primitive type. File %s line %d\n",currName,yylineno);
 									error_typecheck = 1;
-									return 0;
-								}
+									
+								}else{
 								if(empty){
 									//primitive type. 
 									create_node(&$$,expected_type);
@@ -250,8 +260,8 @@ lvalue : IDENT optionbrack  {if((!empty) && $1.type < 3){
 									set_right(&$$,&$2);
 									set_attribute(&$$,&$1,sizeof(identifier));
 								}
-								create_node(&$$,expected_type);
-								set_attribute(&$$,&$1,sizeof(identifier));
+								
+								}
 							}else if(expected_type == -1){
 								fprintf(stderr, "Error typechecking : undeclared identifier line %d file %s name of identifier %s\n",yylineno,currName, $1.name);
 								error_typecheck = 1;
@@ -259,7 +269,9 @@ lvalue : IDENT optionbrack  {if((!empty) && $1.type < 3){
 								fprintf(stderr, "Error typechecking : mismatch of type. Type is %s. line %d file %s name of identifier %s\n",typeTranslation[$1.type],yylineno,currName,$1.name); 
 								error_typecheck = 1;
 							}
+							empty = 1;
 							
+							}
 							}
 		;
 optionbrack : LBRACKET expression RBRACKET 	{empty = 0; $$ = $2; /*nothing */}
@@ -296,15 +308,18 @@ expression 	: constant	{$$ = $1;/*set the node $$ as the value of $1*/}
 									}
 			| IDENT LBRACKET expression RBRACKET {	
 													if($1.type < 3){
-														fprintf(stderr, "Error typechecking : expected array for identifier %s got %s line %d file %s \n",$1.name,typeTranslation[$1.type],yylineno,currName);
-														error_typecheck = 1;
-														return 0;
+														
 													}
 													int expected_type = find_identifier($1.name);
-													if(expected_type == 0){
-														create_node(&$$,expected_type+3);
+													if(expected_type >= 0 && expected_type < 3){
+														fprintf(stderr, "Error typechecking : expected array for identifier %s got %s line %d file %s \n",$1.name,typeTranslation[$1.type],yylineno,currName);
+														error_typecheck = 1;
+														
+													}else if(expected_type >= 3){
+														create_node(&$$,expected_type-3);
 														set_right(&$$,&$3);
 														set_attribute(&$$,&$1,sizeof(identifier));
+													
 													}else if(expected_type == -1){
 														fprintf(stderr, "Error typechecking : identifier %s not declared line %d file %s\n",$1.name,yylineno,currName);
 														error_typecheck = 1;
@@ -425,7 +440,7 @@ ternaryexpr 		: expression QUEST expression COLON expression {
 																	set_right(&$$,colon);
 																	val = QUESTCOLON;
 																	set_attribute(&$$,&val,sizeof(int));
-																	
+																	$$.type = $3.type;
 																	
 																	}
 																	}

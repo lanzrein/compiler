@@ -1,6 +1,7 @@
 examples/
 tests/
 script.sh
+lex.yy.c
 parser.tab.*
 parser.output
 *.o
