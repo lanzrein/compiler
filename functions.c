@@ -68,6 +68,7 @@ void add_return_type(function* f,enum types returnType){
  * @return 1 if the types matches, 0 else 
  * */
 int check_return_type(function* f, enum types given){
+	
 	return f->returnType == given;
 }
 

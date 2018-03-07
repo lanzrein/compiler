@@ -167,7 +167,152 @@ Note that we do not have the exact same form in the file parser.y, as the one de
 No particular structures have been added during this part of the project as we simply decide if an input file follows a particular grammar. 
 The only outside method is the main method, which loads the file and sets up the data structures that might be needed for the lexer. \\
 
+
+\section{Part 3 : Type checking}
+This part concerns mainly the verification of an input program and also creates a basic abstract syntax tree that will be used further in the creation of our compiler. 
+\subsection{Design}
+The typechecking is a task that requires a lot more of coding and files than the parser or lexer. We therefore added four new files and their corresponding header files to help us handle this part. 
+The main of the work is again handled by the file parser.y. On a specific rule the parser calls a method from a newly added file typechecking.c. This new file makes the computation to check if the operation is legal or not and returns an integer if the operation worked or not. Moreover, if a new identifier is declared or a new function is declared it is passed to the typechecking.c file that will store it in a symbol table datastructure. 
+\subsection{Files and description}
+\label{definition}
+\begin{description}
+\item{node.h and node.c}\\ These files contain the datastructure representing a node and all method necessary to handle node management. For example adding a left or right node, clear a node or a whole tree even. 
+\item{functions.h and functions.c} \\ These files has the methods and datastructures to help managing the functions. It has a datastructure for a list of function that we use a rudimentary symbol table. And a datastructure for functions. All methods to create functions, and manage this symbol tables are in here. 
+\item{identifiers.h and identifiers.c} \\These files work similarly to functions.h/functions.c. There is a list that is used as a symbol table for all identifiers, and a datastructure that represents an identifier. Again all methods to help handle the list and the identifier are coded here. 
+\item{typechecking.h and typechecking.c} \\ These files work as an interface between the parser and the previously mentionned files. It contains two lists of identifiers : one for global identifiers, one for global identifiers. The file also has a list of function that have been declared. We will explain in more detail how this file works as it is the main helper to achieve typecheking. 
+\end{description}
+
+\subsection{Data Structures}
+\subsubsection{node.h}
+\begin{lstlisting}[language=C]
+/**
+ * @struct a structure representing a node of an AST
+ * @param lef the left node
+ * @param right the right node
+ * @param type the type of the node if applicable 
+ * @param sizeAttribute the size of the attribute
+ * @param attribute. the attribute
+ * */
+typedef struct node{
+	struct node* left;
+	struct node* right;
+	enum types type; //type of data if applicable NA is used for Operators. 
+	size_t sizeAttribute;
+	void* attribute;
+}node;
+
+
+\end{lstlisting}
+\subsubsection{functions.h}
+\begin{lstlisting}[language=C]
+/**
+ * @struct function carries information about functions
+ * @param name the name of the function
+ * @param argc the argument count of the function >=0 
+ * @param lineDecl the line where the function is first declared
+ * @param filename the name of the file where the function is declared
+ * @param arguments the arguments stored as identifier
+ * @param returnType the return type of the function 
+ * */
+typedef struct{
+	char* name;
+	size_t argc;
+	int lineDecl;
+	char* filename;
+	identifier* arguments;
+	enum types returnType;
+}function;
+/**
+ * @struct a list to hold function
+ * @param size the size of the list
+ * @param functions a pointer to the list of functions. 
+ * */
+typedef struct {
+	size_t size;
+	function* functions;
+}func_list;
+
+
+\end{lstlisting}
+
+\subsubsection{identifiers.h}
+\begin{lstlisting}[language=C]
+/**
+ * @struct identifier represents an identifier with a few attributes
+ * @param type the type of the identifier
+ * @param name the name of the identifier
+ * @param lineDecl the line where the identifier was declared
+ * @param filename the name of the file where it was declared
+ * */
+typedef struct {
+	enum types type;
+	char* name; 
+	int lineDecl;
+	char* filename;
+}identifier;
+/**
+ * @struct id_list a list of identifier
+ * @param size the current size of the list
+ * @param ids the identifiers in the list
+ * */
+typedef struct{
+	size_t size;
+	identifier* ids;
+}id_list;
+\end{lstlisting}
+\subsubsection{tokens.h}
+We add this enum to help process the different types. 
+\begin{lstlisting}[language=C]
+/**
+ * @enum an enum holding the different type in our C language
+ * */
+ enum types{ NA,CHAR, INT, FLOAT , CHARARR, INTARR, FLOATARR };
+ /**
+  * @struct holds the translation in string of the types
+  * */
+ const char* typeTranslation[7];	
+
+\end{lstlisting}
+
+\subsection{Specific methods used}
+\subsubsection{Typecheking}
+As mentioned above, most the work of typechecking is done in the file typechecking.c. 
+We will explain how to use it in order to take the most advantage of it on every part.  
+\subsubsection{Functions}
+When encountering a function, we can either add it to the list of function if it is a function declaration. Or if it is called/defined, we can use the method enter\_function that will setup to read the body of a function. It will create initialize the list of local identifiers, and explicit that we are in the body of the function so further identifiers are added in the correct scope. 
+When exiting a function, remember to use the exit\_function method in order to clean up and check if the return type was given was the one expected. 
+\subsubsection{Identifiers}
+When encountering an identifier, we add them to either the list identifier\_local or identifier\_global depending on the scope. The scope is handled by the file typechecking. Hence all addition of any identifier is simply done by calling the method add\_id\_typecheking(). This will take care of adding in the correct scope. If an identifiers with the same name has already been declared in the same scope. The identifier won't be added and an error message will be displayed informing of the error. \\
+
+\subsubsection{Expressions}
+When encountering an expression, the program creates a node that it will try to link with a left a right node if appropriate. This allows to create a basic abstract syntax tree that will be made better when time allows in order to make further assignments easier. 
+Any expression has a specific type. The program verifies that all operations that are performed with identifiers, constants and function calls are done within the rules defined in the instructions. 
+If any error is detected the program will discard the line where the expression is and the operation that has failed will be reported in the console for the user to fix. 
+
+\subsubsection{Function overloading}
+Function overloading has been implemented. Meaning two function can have the same name and return type as long as their arguments not all their arguments match on their type. Since we have not yet implement widening of types this is fairly simple to implement on top of the basic code. We just need to change the code that verifies if two functions are equal or not. 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

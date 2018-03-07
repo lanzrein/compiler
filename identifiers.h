@@ -56,6 +56,7 @@ void ident_free(identifier* id);
  * */
 int ident_compare(identifier* id1, identifier* id2);
 
+
 /************FUNCTIONS FOR LIST ***************/
 
 /**
