@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//TODO CHECK FOR MEMERROR 
 /**
  * @brief creates a new function and stores it in a pointer
  * @param f the function created
@@ -16,7 +15,7 @@
  * @param filename the file name of the funciton
  * */
 void create_function(function* f,identifier* args,size_t argc,char* name,int lineDecl,char* filename){
-		//f = malloc(sizeof(function));
+
 		if(!f){
 			fprintf(stderr,"Error :function is null!\n");
 			return;
@@ -98,7 +97,6 @@ int functions_equals(function* f1, function* f2){
 			for(int i = 0; i < f1->argc; i++){
 				if(f1->arguments[i].type != f2->arguments[i].type){
 					//if any argument is different type 
-					//TODO change to match widening arguments.  
 					return 1;
 				}
 			}
@@ -118,7 +116,7 @@ int functions_equals(function* f1, function* f2){
  * */
 void init_list(func_list* fl){
 	if(!fl){
-		fprintf(stderr,"Error : no more memory!\n");
+		fprintf(stderr,"Error : Function list is null!\n");
 		return;
 	}
 	fl->size = 0;
@@ -150,7 +148,8 @@ void init_list(func_list* fl){
  * */
 void add_function(func_list* fl, function* f){
 	//check if the function has already been declared. 
-	if(!fl){
+	if(!fl || !f){
+		fprintf(stderr,"Error : function or function list has not been allocated\n");
 		return;
 	}
 	int i = check_if_exists(fl,f);
@@ -193,7 +192,6 @@ void copyfunc(function* copy,function* orig){
 	}
 		
 	
-	//~ copy = malloc(sizeof(function));
 	
 	copy->name = malloc(sizeof(strlen(orig->name)));
 	strcpy(copy->name,orig->name);

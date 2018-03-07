@@ -206,7 +206,6 @@ void exit_function(function* f, enum types returnType){
 	 if(left->type > FLOAT){
 		 return -2; //illegal type. 
 	 }
-	 //n = malloc(sizeof(node));
 
 
 	 n->type = left->type;
@@ -242,7 +241,6 @@ void exit_function(function* f, enum types returnType){
 	 n->type = left->type - FLOAT;//check in tokens.h to see why. 
 	 set_left(n,left);
 	 set_right(n,right);
-	 //TODO something else ???
 	 
 	 return 0;
 	 

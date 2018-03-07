@@ -40,3 +40,25 @@
 - The same notes as for part 1 apply : a few warnings, and careful of the directory we use. 
 
 
+## Part 3 : Type checking
+### New files : 
+- typecheking.h / typechecking.c : files that holds the typechecking system interface and methods
+- node.c / node.h : files to represent a node. Will be used more later on to build the AST
+- functions.c / functions.h : This file holds the functions and data structure to represent functions
+- identifiers.h / identifiers.c : Functions and data structure to represent our identifiers. 
+
+### Modified files : 
+- parser.y : Now on most of the rules we have added a specific actions that interacts with a method of the typechecking system. 
+- lexer.l : On a few inputs we prepare the terminal to make it easier for the typechecking system. 
+
+### Building instruction
+- make 
+- ./compile file 
+
+### Notes 
+- The same notes as for part 1 apply : a few warnings, and careful of the directory we use. 
+- For extra credit we implement : function overloading. 
+- On parsing and lexer errors the compiler stops immediatly if encountering an error, on typechecking error it will continue. 
+
+
+

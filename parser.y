@@ -42,13 +42,13 @@
 	enum types returnType;
 	
 	int empty; //if brackets are empty ornot
-	int error_typecheck;
-	int countList; 
-	node args[MAX_FUNCTION_ARGS];
+	int error_typecheck; //flag to know if there is an error in the current expression
+	int countList; //counts how many args they are
+	node args[MAX_FUNCTION_ARGS];//list to represent the arguments of a function call
 
 	
 %}
-
+//possible attribute of the non terminals ( and also a few terminals ) 
 %union{
 	node n;
 	function f;
@@ -94,32 +94,13 @@
 %right BANG TILDE DECR INCR  UAMP UMINUS PARTYPE //pseudo token for casting ((type) )
 %left LPAR RPAR LBRACKET RBRACKET 
 
-
+//Define the type for all of the non terminals. 
 %type <f> functionprototype functiondefinition functiondeclaration
 %type <id> variabledeclaration declaration
 %type <id> formalparameter
 %type <n> expression constant binaryop unaryop ternaryexpr lvalue optionbrack
 %type <type> incrdecr
-//This are the values that come from lexer..
 
-
-/**NEEDS : 
- * Print result of expression at file line etc. 
- * type mismatch checks
- * functions calls have correct parameters
- * return statement have correct type
- * undeclared variable and functions. 
- * ---> best effort. 
- * */
- /**
- 1)declaration of variable
- 2) declaration of functions
- 3) check for return type of functions
- 4) check for functions call
- 5) check for undeclared var/func
- 6) print res of expression
- 
- */
 %start program 
 
 %% 
@@ -144,7 +125,6 @@ variabledeclaration : TYPE listidentifiers SEMI 	{/*create a list of identifiers
 														}
 														
 														//clear the ids. 
-														//free(ids.ids);
 														ids.size = 0;
 													} ; 
 listidentifiers : declaration COMMA listidentifiers  {if(debug){printf("Adding identifier %s to the list\n",$1.name);}add_id(&ids,&$1);}

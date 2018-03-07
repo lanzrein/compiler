@@ -21,7 +21,7 @@
  * @param type the type of the identifier
  * */
 void ident_decl(identifier* id, char* name,int lineDecl,char* filename,enum types type){
-	//~ id = malloc(sizeof(identifier));
+
 	if(!id){
 		fprintf(stderr,"Error : no more memory\n");
 		return;
