@@ -48,6 +48,10 @@ void write_getchar(){
 
 void write_putchar();
 
+
+
+
+
 //For relational operations
 
 void rel_op(node* bool, node* expr_1, node* expr_2, char rel_op){
@@ -89,16 +93,58 @@ void do_while_loop(node* boolean, node* statement);
 
 //Function call
 
-void function_call(char* function_name, int argc);
-//Assignements
-
-void assignement(node* assigned, node* assignement){
-	//write to file the assignement in java byte code. 
+void function_call(char* function_name, char* args){
+	//we already know that the function name is correct. 
+	//arguments need to be pushed on the stack BEFORE calling funciton
+	char[512] invoke;
+	//find the return type...
+	sprintf(invoke,"L%d:\tinvokestatic Method %s %s (%s)%c\n",lineno,filename, function_name,args,);
+	
+	fwrite(invoke,strlen(invoke),output_file);
+	
+	return;
 	
 	
 	
 	
 }
+//Assignements
+
+void assignement(node* assigned, node* assignement){
+	//write to file the assignement in java byte code. 
+	//the assigned needs to be a declared variable. 
+	char* name = assigned->attribute;
+	//the name is in the attribute
+	
+	//we need to get the type of the assigned. 
+	int type = find_identifier(name);//1 = char, 2= int, 3 = float
+
+	switch(type){
+		case 1: 
+			//char
+			
+		
+		
+		
+		
+		
+		
+		case 2: 
+		
+		
+		
+		
+		
+		
+		case 3: 
+		
+	}
+	
+	
+	
+}
+
+
 
 //Function definitions
 
@@ -109,6 +155,38 @@ void statement_list(node* concate_state,node* stat_1, node* stat_2){
 	stat_2.next = concate_state.next;
 	
 	concate_state.code = concat( /* concat sentences */ stat_1.code, label(stat_1.next), stat_2.code);
+	
+	
+}
+
+void global_decl(node* expression){
+	//name 
+	char* name = (char*) expression->attribute;
+	char * type = type_to_char(expression->type);
+	
+	char[512] line;
+	
+	sprintf(line,".field static %s %s",name,type);
+	
+	fwrite(line,strlen(line),output_file);
+	return;
+	
+	
+}
+
+
+
+char* type_to_char(int type){
+	switch(type){
+		case 1: return "C";
+		case 2: return "I";
+		case 3: return "F";
+		case 4: return "[C";
+		case 5: return "[I";
+		case 6: return "[F";
+		default: return "";
+		
+	}
 	
 	
 }

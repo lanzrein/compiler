@@ -64,3 +64,6 @@ void assignement(node* assigned, node* assignement);
 
 //Statement list. 
 void statement_list(node* xs, node* new_statement);
+
+
+void global_decl(node* expression);
