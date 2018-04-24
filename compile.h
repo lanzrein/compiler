@@ -1,11 +1,13 @@
 /**
  * File containing the method for generating the code. 
  * */
+#include <stdlib.h>
+#include "node.h"
+#include "functions.h"
 
-#include <node.h>
 
 //Setup the compiler - give the file name to open
-FILE* output_file
+FILE* output_file;
 int setup_compiler(char* output_name);
 //Finish up the compiler and write the file to system
 void close_compiler();
@@ -18,12 +20,12 @@ void write_putchar();
 
 //For relational operations
 
-void rel_op(node* expr_1, node* expr_2, char rel_op);
+void rel_op(node* boolean,node* expr_1, node* expr_2, char rel_op);
 
 
 //For arithmetic op
 
-void arithm_op(node* expr_1, node* expr_2, int arit_op);
+void arithm_op(node* expr,node* expr_1, node* expr_2, int arit_op);
 
 //For logical and
 //need to have short circuiting
@@ -54,7 +56,7 @@ void do_while_loop(node* boolean, node* statement);
 
 //Function call
 
-void function_call(char* function_name, int argc);
+void function_call(char* function_name,identifier*args, int argc);
 //Assignements
 
 void assignement(node* assigned, node* assignement);
@@ -63,7 +65,9 @@ void assignement(node* assigned, node* assignement);
 
 
 //Statement list. 
-void statement_list(node* xs, node* new_statement);
+void statement_list(node* concate_state,node* stat_1, node* stat_2);
 
 
 void global_decl(node* expression);
+
+char* type_to_char(int type);

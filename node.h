@@ -4,6 +4,8 @@
  * */
 
 #pragma once
+#include <stdlib.h>
+
 #include "tokens.h"
 /**
  * @struct a structure representing a node of an AST

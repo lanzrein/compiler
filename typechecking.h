@@ -83,6 +83,15 @@ int return_type(char* function_name, enum types type);
  * @return 0 in success, -1 in not found, -2 if mismatch 
  * */
 enum types find_identifier(char* id_name);
+
+
+/**
+ * @brief finds the function
+ * @param the name of the function
+ * @return a pointer to the function, NULL if the function does not exist
+ * */
+function find_function(char* function_name,identifier* args,int argc);
+
 /**
  * @brief search in a list of identifier for a ident
  * @param list the list to search from 

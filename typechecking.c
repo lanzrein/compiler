@@ -276,7 +276,54 @@ int return_type(char* function_name, enum types type){
 		
 		return search_in(identifier_global,id_name);
 		
+		
+		
  }
+ 
+ 
+ 
+ /**
+ * @brief finds the function
+ * @param the name of the function
+ * @return a pointer to the function, NULL if the function does not exist
+ * */
+function find_function(char* function_name,identifier* args,int argc){
+	//This way to procede is much more lenient. 
+	//because we just want to find the function with the 
+	//same name and argument types. 
+	for(int i = 0; i < function_list->size;i++){
+		function f = function_list->functions[i];
+		if(strcmp(f.name,function_name) ==0 && argc == f.argc){
+			//same name
+			int match = 1;
+			for(int j = 0; j < argc;j++){
+				if(f.arguments[j].type != args[j].type){
+					match = 0;
+					
+					break;
+				}
+				
+			}
+			
+			if(match){
+				return f;
+				
+			}
+			
+			
+		}
+		
+		
+	}
+	
+	function f;
+	memset(&f,'\0',sizeof(function));
+	return f;
+	
+	
+	
+	
+}
  
  /**
  * @brief search in a list of identifier for a ident

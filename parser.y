@@ -4,6 +4,7 @@
 	#include "functions.h"
 	#include "identifiers.h"
 	#include "tokens.h"
+	#include "compile.h"
 
 
 }
@@ -726,6 +727,7 @@ int main(int argc, char** argv)
 		//will be freed in process <<EOF>>
 		currName = malloc(strlen(argv[1])+1);
 		strcpy(currName,argv[1]);
+		
 		if(NULL==yyin){
 			fprintf(stderr,"Error file %s can't be opened\n",argv[1]);
 			exit(1);
@@ -736,6 +738,16 @@ int main(int argc, char** argv)
 			}
 			
 		}
+		//setup the compiler. 
+		char name[strlen(currName)+1];
+		strncpy(name,currName,strlen(currName)-2);
+		name[strlen(currName)] = '\0';
+		setup_compiler(name);
+		//we decide to automatically include the function putchar and getchar
+		//even if they are not prototyped. -> note if they are not prototyped
+		//it will produce a typecheck error
+		write_getchar();
+		write_putchar();
 		//file was opened
 		if(debug){printf("Opening file : %s\n", argv[1]);}
 		yyparse();
@@ -746,6 +758,7 @@ int main(int argc, char** argv)
 	}
 	//close up everything. 
 	close_typecheck();
+	close_compiler();
 	
 	
 }
