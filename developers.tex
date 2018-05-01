@@ -292,30 +292,38 @@ If any error is detected the program will discard the line where the expression 
 \subsubsection{Function overloading}
 Function overloading has been implemented. Meaning two function can have the same name and return type as long as their arguments not all their arguments match on their type. Since we have not yet implement widening of types this is fairly simple to implement on top of the basic code. We just need to change the code that verifies if two functions are equal or not. In order to do that, instead of simply comparing the names, we also add a comparison in the arguments. The functions are equal only if all argument types match and the name match. Any conflict in return types will produce an error. 
 
+
+
+\section{Part 4 : Code Generation}
+\subsection{Design}
+For this final part, we add the file and its corresponding header compile.c/compile.h. This file will handle all the code generation and will write to the corresponding output file. \\
+We also modify parser.y file so it calls the compile functions when it is necessary. Due to limitation in time and other work, we were unfortunately unable to implement most of the features that should be able to be in a normal compiler. 
+\subsection{Files and description}
+\label{definition}
+\begin{description}
+\item{compile.c/compile.h}\\
+As stated before, this file contains all the function call that are necessary to process and write to the output file. We have to start the compile process by calling the setup\_compile and close the compiler at the end by calling close\_compiler. 
+\end{description}
+\subsection{Data Structures}
+We will mainly discuss how we implemented the Symbol table that is necessary for the compiler. 
+\subsubsection{Symbol Table}
+The symbol table is used for the compiler to store all different variables and functions that are in the program. We are actually continuing to use the same symbol table we had before. Mainly it consists of three different data structures that were already mentioned before. Namely three different list that are all in the typecheking.c file : function\_list, identifier\_global and identifier\_local. Each of the list stores as their name explicitly says : function, global identifiers and local identifiers. 
+
+\subsection{Implementation}
+Due to lack of time, only a very limited subset of the requirements were implemented. 
+\label{definition}
+\begin{description}
+\item{Built in function}\\
+The builtin functions getChar and putChar are translated into the Stack machine language. 
+\item{Global variable declaration}\\
+Global variable declarations are implemented and translated. 
+
+\end{description}
+
+\section{Conclusion}
+Thorough the project, we have built a compiler. Starting from the lexer that would process the tokens, then we progressed to make a parser that would verify that a given program respected the grammar. The type checking helped to verify that the types were matched and there was no mistakes in the type inference. \\
+Unfortunately, we were not able to make a full fledged compiler as the last part was far from finished in the implementation. Further improvement could of course finish the implementation of the compiler or even have some of the optimization technique that we have explored in class.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 %% APPENDIX 

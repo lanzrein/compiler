@@ -68,7 +68,7 @@
 - parser.y : modified it so it calls the functions from compile.c when necessary
 ### Building instructions
 - make
-- ./copile file [debug]
+- ./compile file [debug]
 ### Implemented objects 
 - putChar and getChar functions
 - global variables declarations
