@@ -123,6 +123,12 @@ variabledeclaration : TYPE listidentifiers SEMI 	{/*create a list of identifiers
 															identifier id = ids.ids[i];
 															id.type += $1;//adjust the type. 
 															add_identifier_typechecking(&id);
+															//add it to the compiler. 
+															node n;
+															n.type = $1;
+															n.attribute = malloc(sizeof(strlen(id.name)));
+															strcpy(n.attribute, id.name);
+															global_decl(&n);
 														}
 														
 														//clear the ids. 

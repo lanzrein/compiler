@@ -60,5 +60,21 @@
 - For extra credit we implement : function overloading. 
 - On parsing and lexer errors the compiler stops immediatly if encountering an error, on typechecking error it will continue. 
 
+## Part 4 : Code Generation 
+
+### New files
+- compile.c / compile.h : contains the files for the code generation
+### Modified files 
+- parser.y : modified it so it calls the functions from compile.c when necessary
+### Building instructions
+- make
+- ./copile file [debug]
+### Implemented objects 
+- putChar and getChar functions
+- global variables declarations
+- ... 
+
+### Notes 
+- The same notes as for part 1 apply : a few warnings, and careful of the directory we use. 
 
 
